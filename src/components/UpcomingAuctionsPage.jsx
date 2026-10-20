@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Calendar,
   Clock,
@@ -19,12 +20,30 @@ export default function UpcomingAuctionsPage({
   onSetReminder,
   onViewVehicle
 }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get('category');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedMake, setSelectedMake] = useState('All');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || 'All');
   const [remindedIds, setRemindedIds] = useState([]);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+
+  useEffect(() => {
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [categoryFromUrl]);
+
+  const categoryOptions = [
+    { id: 'All', label: 'All Lots' },
+    { id: 'insurance', label: 'Insurance Auctions' },
+    { id: 'bank-nbfc', label: 'Bank / NBFC Auctions' },
+    { id: 'used-vehicle', label: 'Used Vehicle Auctions' },
+    { id: 'used-spare-parts', label: 'Used Spare Parts' },
+    { id: 'ready-to-lift', label: 'Ready to Lift' }
+  ];
 
   const activeFilterCount = [
     selectedLocation !== 'All',
@@ -38,6 +57,8 @@ export default function UpcomingAuctionsPage({
     setSelectedLocation('All');
     setSelectedMake('All');
     setSelectedCategory('All');
+    searchParams.delete('category');
+    setSearchParams(searchParams, { replace: true });
   };
 
   const filteredAuctions = useMemo(() => {
@@ -57,7 +78,7 @@ export default function UpcomingAuctionsPage({
       if (selectedMake !== 'All' && !auc.title?.toLowerCase().includes(selectedMake.toLowerCase())) {
         return false;
       }
-      if (selectedCategory !== 'All' && !auc.category?.toLowerCase().includes(selectedCategory.toLowerCase())) {
+      if (selectedCategory !== 'All' && auc.category !== selectedCategory) {
         return false;
       }
       return true;
@@ -110,6 +131,32 @@ export default function UpcomingAuctionsPage({
       {/* 02 FILTERS BAR */}
       <section className="upcoming-filters-bar">
         <div className="salvex-container">
+          {/* Quick Category Chips Row */}
+          <div className="live-category-pills-row" style={{ marginBottom: '16px' }}>
+            <span className="category-label">Category:</span>
+            <div className="category-pills-scroll">
+              {categoryOptions.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`live-cat-pill ${selectedCategory === cat.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedCategory(cat.id);
+                    if (cat.id === 'All') {
+                      searchParams.delete('category');
+                    } else {
+                      searchParams.set('category', cat.id);
+                    }
+                    setSearchParams(searchParams, { replace: true });
+                  }}
+                  data-testid={`upcoming-category-tab-${cat.id}`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Quick Stats Pill & Mobile Filter Trigger */}
           <div className="card-page-header-actions">
             <span className="card-page-stats-pill">

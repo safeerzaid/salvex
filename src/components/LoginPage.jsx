@@ -251,7 +251,7 @@ export default function LoginPage({
               onClick={() => handleQuickPersona('bidder')}
             >
               <UserCheck size={14} className="text-auction-red" />
-              <span>Verified Bidder</span>
+              <span>Demo Bidder</span>
             </button>
 
             <button
@@ -261,6 +261,15 @@ export default function LoginPage({
             >
               <Building size={14} className="text-info" />
               <span>Consignor / Seller</span>
+            </button>
+
+            <button
+              type="button"
+              className="persona-btn"
+              onClick={() => handleQuickPersona('admin')}
+            >
+              <ShieldCheck size={14} style={{ color: '#075BFF' }} />
+              <span>Super Admin</span>
             </button>
           </div>
         </div>

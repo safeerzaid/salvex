@@ -1,24 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Search,
   Filter,
-  Flame,
-  Heart,
-  Gavel,
-  ArrowRight,
-  ShieldCheck,
-  Fuel,
-  Gauge,
   MapPin,
-  AlertCircle,
   RotateCcw,
-  CheckCircle2,
   Car,
   SlidersHorizontal,
-  ChevronDown,
-  Sparkles,
-  Zap,
-  X
+  X,
+  ShieldCheck,
+  AlertCircle
 } from 'lucide-react';
 import VehicleCard from './VehicleCard';
 
@@ -29,21 +20,31 @@ export default function LiveAuctionsPage({
   onViewDetails,
   onPlaceBidQuick
 }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get('category');
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || 'All');
   const [selectedMake, setSelectedMake] = useState('All');
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedCondition, setSelectedCondition] = useState('All');
   const [sortBy, setSortBy] = useState('ending-soon');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
+  useEffect(() => {
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [categoryFromUrl]);
+
   // Categories list
-  const categories = [
-    'All',
-    'Luxury SUVs',
-    'Exotics & Performance',
-    'Executive Sedans',
-    'Bank Repossessed'
+  const categoryOptions = [
+    { id: 'All', label: 'All Lots' },
+    { id: 'insurance', label: 'Insurance Auctions' },
+    { id: 'bank-nbfc', label: 'Bank / NBFC Auctions' },
+    { id: 'used-vehicle', label: 'Used Vehicle Auctions' },
+    { id: 'used-spare-parts', label: 'Used Spare Parts' },
+    { id: 'ready-to-lift', label: 'Ready to Lift' }
   ];
 
   // Distinct makes from vehicles
@@ -68,13 +69,7 @@ export default function LiveAuctionsPage({
 
       // Category Filter
       if (selectedCategory !== 'All') {
-        if (selectedCategory === 'Bank Repossessed') {
-          const isRepo =
-            v.condition?.toLowerCase().includes('repo') ||
-            v.source?.toLowerCase().includes('repo') ||
-            v.source?.toLowerCase().includes('bank');
-          if (!isRepo) return false;
-        } else if (v.category !== selectedCategory) {
+        if (v.category !== selectedCategory) {
           return false;
         }
       }
@@ -162,17 +157,25 @@ export default function LiveAuctionsPage({
           <div className="live-controls-panel">
             {/* Quick Category Chips Row */}
             <div className="live-category-pills-row">
-              <span className="category-label">Quick Filter:</span>
+              <span className="category-label">Category:</span>
               <div className="category-pills-scroll">
-                {categories.map((cat) => (
+                {categoryOptions.map((cat) => (
                   <button
-                    key={cat}
+                    key={cat.id}
                     type="button"
-                    className={`live-cat-pill ${selectedCategory === cat ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(cat)}
+                    className={`live-cat-pill ${selectedCategory === cat.id ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      if (cat.id === 'All') {
+                        searchParams.delete('category');
+                      } else {
+                        searchParams.set('category', cat.id);
+                      }
+                      setSearchParams(searchParams, { replace: true });
+                    }}
+                    data-testid={`category-tab-${cat.id}`}
                   >
-                    {cat === 'All' ? 'All Lots' : cat}
-                    {cat === 'All' && <span className="cat-count">({vehicles.length})</span>}
+                    {cat.label}
                   </button>
                 ))}
               </div>
