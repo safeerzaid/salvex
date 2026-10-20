@@ -16,7 +16,7 @@ gsap.registerPlugin(ScrollTrigger);
  * - Respects prefers-reduced-motion
  * - Strict transform & opacity only
  */
-export function useScrollAnimations(currentRoute) {
+export function useScrollAnimations(pathname) {
   useEffect(() => {
     // 01. Accessibility Check: Disable animations if user prefers reduced motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -228,5 +228,5 @@ export function useScrollAnimations(currentRoute) {
       clearTimeout(refreshTimer);
       mm.revert();
     };
-  }, [currentRoute]);
+  }, [pathname]);
 }

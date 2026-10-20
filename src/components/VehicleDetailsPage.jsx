@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import {
   Heart,
   Share2,
@@ -22,9 +23,10 @@ import {
 import './VehicleDetailsPage.css';
 import VehicleCard from './VehicleCard';
 import { BID_INCREMENT } from '../constants';
+import { liveVehiclesData } from '../data/mockVehicles';
 
 export default function VehicleDetailsPage({
-  vehicle,
+  vehicle: propVehicle,
   onNavigateHome,
   onNavigateLiveAuctions,
   _onOpenBidModal,
@@ -34,6 +36,9 @@ export default function VehicleDetailsPage({
   onViewVehicleDetails,
   similarVehicles = []
 }) {
+  const { id } = useParams();
+  const vehicle = propVehicle || liveVehiclesData.find((v) => v.id === id);
+
   const vehicleTitle = [vehicle?.yearMfg || vehicle?.year, vehicle?.make, vehicle?.model].filter(Boolean).join(' ') || 'Vehicle Details';
   const mainImage = vehicle?.image || '/images/defender-110.jpg';
 
@@ -99,6 +104,25 @@ export default function VehicleDetailsPage({
 
     return () => clearInterval(timerId);
   }, [vehicle?.id, vehicle?.endsInSeconds]);
+
+  if (!vehicle) {
+    return (
+      <div className="salvex-vehicle-minimal-page" style={{ padding: '80px 20px', textAlign: 'center', minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#0B1220', marginBottom: '12px' }}>Vehicle Not Found</h2>
+        <p style={{ color: '#64748B', maxWidth: '480px', marginBottom: '24px', fontSize: '15px' }}>
+          The requested vehicle lot could not be found or the auction has been archived.
+        </p>
+        <Link
+          to="/vehicles"
+          className="btn-primary"
+          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+        >
+          <span>Browse All Vehicles</span>
+          <ArrowRight size={16} />
+        </Link>
+      </div>
+    );
+  }
 
   const formatCountdown = (totalSec) => {
     const h = Math.floor((totalSec % 86400) / 3600);

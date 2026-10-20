@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
 import {
   Truck,
   MapPin,
@@ -18,13 +19,20 @@ import {
 import { wonAuctionsData } from '../data/mockVehicles';
 
 export default function VehicleLiftingPage({
-  lotId = 'won-102',
+  lotId: propLotId,
   onNavigateDashboard,
   onShowToast
 }) {
-  const lot = wonAuctionsData.find((l) => l.id === lotId) || wonAuctionsData[1];
-  const [liftingStage, setLiftingStage] = useState(lot.liftingStatus === 'Vehicle Ready' ? 3 : 4);
+  const { lotId: paramLotId } = useParams();
+  const targetLotId = paramLotId || propLotId || 'won-102';
+  const lot = wonAuctionsData.find((l) => l.id === targetLotId);
+
+  const [liftingStage, setLiftingStage] = useState(lot?.liftingStatus === 'Vehicle Ready' ? 3 : 4);
   const [collectionConfirmed, setCollectionConfirmed] = useState(false);
+
+  if (!lot) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const stages = [
     { num: 1, label: 'Payment Completed', desc: 'Secure settlement (demo) confirmed' },

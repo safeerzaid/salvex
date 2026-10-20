@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
 import {
   CreditCard,
   Building2,
@@ -17,16 +18,23 @@ import { wonAuctionsData } from '../data/mockVehicles';
 import './PaymentPage.css';
 
 export default function PaymentPage({
-  lotId = 'won-101',
+  lotId: propLotId,
   onNavigateLifting,
   onNavigateDashboard,
   onShowToast
 }) {
-  const lot = wonAuctionsData.find((l) => l.id === lotId) || wonAuctionsData[0];
-  const [paymentStatus, setPaymentStatus] = useState(lot.paymentStatus || 'Pending'); // 'Pending' | 'Processing' | 'Paid' | 'Failed'
+  const { lotId: paramLotId } = useParams();
+  const targetLotId = paramLotId || propLotId || 'won-101';
+  const lot = wonAuctionsData.find((l) => l.id === targetLotId);
+
+  const [paymentStatus, setPaymentStatus] = useState(lot?.paymentStatus || 'Pending'); // 'Pending' | 'Processing' | 'Paid' | 'Failed'
   const [paymentMethod, setPaymentMethod] = useState('rtgs'); // 'rtgs' | 'netbanking'
   const [utrNumber, setUtrNumber] = useState('');
   const [copiedField, setCopiedField] = useState(null);
+
+  if (!lot) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Financial calculations
   const winningBid = lot.winningBid || 0;

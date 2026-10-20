@@ -49,6 +49,10 @@ export default function LoginPage({
       }
 
       setStatusState('success');
+      // TEMPORARY: fake auth for prototype, replace with real backend auth
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('salvex_demo_auth', JSON.stringify({ isAuthenticated: true, role: 'bidder' }));
+      }
       if (onShowToast) onShowToast('Login authenticated successfully. Welcome to Salvex Auction.');
       setTimeout(() => {
         if (onLoginSuccess) onLoginSuccess('bidder');
@@ -60,6 +64,10 @@ export default function LoginPage({
     setStatusState('loading');
     setTimeout(() => {
       setStatusState('success');
+      // TEMPORARY: fake auth for prototype, replace with real backend auth
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('salvex_demo_auth', JSON.stringify({ isAuthenticated: true, role }));
+      }
       if (onShowToast) onShowToast(`Logged in as ${role.toUpperCase()} (Demo Mode)`);
       setTimeout(() => {
         if (onLoginSuccess) onLoginSuccess(role);
