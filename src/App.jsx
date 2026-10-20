@@ -116,7 +116,9 @@ export default function App() {
   const getActiveSection = () => {
     const path = location.pathname;
     if (path === '/') return 'home';
-    if (path.startsWith('/auctions')) return 'auctions';
+    if (path.startsWith('/auctions/live')) return 'live-auctions';
+    if (path.startsWith('/auctions/upcoming')) return 'upcoming-auctions';
+    if (path.startsWith('/auctions')) return 'live-auctions';
     if (path.startsWith('/ready-to-lift')) return 'ready-to-lift';
     if (path.startsWith('/services')) return 'services';
     if (path === '/sell') return 'services';

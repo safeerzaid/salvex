@@ -30,16 +30,20 @@ export default function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('INR ₹');
-  const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
-  const [auctionsDropdownOpen, setAuctionsDropdownOpen] = useState(false);
+  const [liveAuctionsDropdownOpen, setLiveAuctionsDropdownOpen] = useState(false);
+  const [upcomingAuctionsDropdownOpen, setUpcomingAuctionsDropdownOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
-  const [mobileAuctionsOpen, setMobileAuctionsOpen] = useState(false);
+  const [mobileLiveAuctionsOpen, setMobileLiveAuctionsOpen] = useState(false);
+  const [mobileUpcomingAuctionsOpen, setMobileUpcomingAuctionsOpen] = useState(false);
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      if (!e.target.closest('#nav-wrap-auctions')) {
-        setAuctionsDropdownOpen(false);
+      if (!e.target.closest('#nav-wrap-live-auctions')) {
+        setLiveAuctionsDropdownOpen(false);
+      }
+      if (!e.target.closest('#nav-wrap-upcoming-auctions')) {
+        setUpcomingAuctionsDropdownOpen(false);
       }
       if (!e.target.closest('#nav-wrap-services')) {
         setServicesDropdownOpen(false);
@@ -51,7 +55,8 @@ export default function Navbar({
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        setAuctionsDropdownOpen(false);
+        setLiveAuctionsDropdownOpen(false);
+        setUpcomingAuctionsDropdownOpen(false);
         setServicesDropdownOpen(false);
         setCurrencyDropdownOpen(false);
         setMobileMenuOpen(false);
@@ -114,7 +119,8 @@ export default function Navbar({
     setIsScrolled(false);
     setIsVisible(true);
     setMobileMenuOpen(false);
-    setAuctionsDropdownOpen(false);
+    setLiveAuctionsDropdownOpen(false);
+    setUpcomingAuctionsDropdownOpen(false);
     setServicesDropdownOpen(false);
     if (onNavigate) {
       onNavigate(idOrPath);
@@ -358,102 +364,119 @@ export default function Navbar({
                 {activeSection === 'home' && <span className="nav-bottom-indicator" />}
               </button>
 
-              {/* Auctions Dropdown */}
+              {/* Live Auctions Dropdown */}
               <div
                 className="navbar-dropdown-wrap"
-                id="nav-wrap-auctions"
-                onMouseEnter={() => setAuctionsDropdownOpen(true)}
-                onMouseLeave={() => setAuctionsDropdownOpen(false)}
+                id="nav-wrap-live-auctions"
+                onMouseEnter={() => setLiveAuctionsDropdownOpen(true)}
+                onMouseLeave={() => setLiveAuctionsDropdownOpen(false)}
               >
                 <button
                   type="button"
-                  onClick={() => setAuctionsDropdownOpen((prev) => !prev)}
-                  className={`nav-link-btn ${activeSection === 'auctions' ? 'nav-link-active' : ''}`}
-                  id="nav-link-auctions"
-                  aria-expanded={auctionsDropdownOpen}
+                  onClick={() => setLiveAuctionsDropdownOpen((prev) => !prev)}
+                  className={`nav-link-btn ${activeSection === 'live-auctions' ? 'nav-link-active' : ''}`}
+                  id="nav-link-live-auctions"
+                  aria-expanded={liveAuctionsDropdownOpen}
                   aria-haspopup="true"
                 >
-                  <span>Auctions</span>
-                  <ChevronDown size={14} className={`dropdown-chevron ${auctionsDropdownOpen ? 'open' : ''}`} />
-                  {activeSection === 'auctions' && <span className="nav-bottom-indicator" />}
+                  <span>Live Auctions</span>
+                  <span className="nav-live-capsule">LIVE</span>
+                  <ChevronDown size={14} className={`dropdown-chevron ${liveAuctionsDropdownOpen ? 'open' : ''}`} />
+                  {activeSection === 'live-auctions' && <span className="nav-bottom-indicator" />}
                 </button>
 
-                {auctionsDropdownOpen && (
+                {liveAuctionsDropdownOpen && (
                   <div className="navbar-dropdown-menu" role="menu">
-                    {/* Live Auctions Group */}
-                    <div className="dropdown-section">
-                      <button
-                        type="button"
-                        className="dropdown-item dropdown-section-title"
-                        onClick={() => handleLinkClick('/auctions/live')}
-                        id="nav-item-live-auctions"
-                      >
-                        <span>Live Auctions</span>
-                        <span className="nav-live-capsule">LIVE</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="dropdown-item dropdown-sub-item"
-                        onClick={() => handleLinkClick('/auctions/live?category=insurance')}
-                        id="nav-subitem-live-insurance"
-                      >
-                        Insurance Auctions
-                      </button>
-                      <button
-                        type="button"
-                        className="dropdown-item dropdown-sub-item"
-                        onClick={() => handleLinkClick('/auctions/live?category=bank-nbfc')}
-                        id="nav-subitem-live-bank"
-                      >
-                        Bank / NBFC Auctions
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/auctions/live')}
+                      id="nav-item-all-live-auctions"
+                    >
+                      All Live Auctions
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/auctions/live?category=insurance')}
+                      id="nav-subitem-live-insurance"
+                    >
+                      Insurance Auctions
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/auctions/live?category=bank-nbfc')}
+                      id="nav-subitem-live-bank"
+                    >
+                      Bank / NBFC Auctions
+                    </button>
+                  </div>
+                )}
+              </div>
 
-                    <div className="dropdown-divider" />
+              {/* Upcoming Auctions Dropdown */}
+              <div
+                className="navbar-dropdown-wrap"
+                id="nav-wrap-upcoming-auctions"
+                onMouseEnter={() => setUpcomingAuctionsDropdownOpen(true)}
+                onMouseLeave={() => setUpcomingAuctionsDropdownOpen(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => setUpcomingAuctionsDropdownOpen((prev) => !prev)}
+                  className={`nav-link-btn ${activeSection === 'upcoming-auctions' ? 'nav-link-active' : ''}`}
+                  id="nav-link-upcoming-auctions"
+                  aria-expanded={upcomingAuctionsDropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <span>Upcoming Auctions</span>
+                  <ChevronDown size={14} className={`dropdown-chevron ${upcomingAuctionsDropdownOpen ? 'open' : ''}`} />
+                  {activeSection === 'upcoming-auctions' && <span className="nav-bottom-indicator" />}
+                </button>
 
-                    {/* Upcoming Auctions Group */}
-                    <div className="dropdown-section">
-                      <button
-                        type="button"
-                        className="dropdown-item dropdown-section-title"
-                        onClick={() => handleLinkClick('/auctions/upcoming')}
-                        id="nav-item-upcoming-auctions"
-                      >
-                        <span>Upcoming Auctions</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="dropdown-item dropdown-sub-item"
-                        onClick={() => handleLinkClick('/auctions/upcoming?category=insurance')}
-                        id="nav-subitem-upcoming-insurance"
-                      >
-                        Insurance Auctions
-                      </button>
-                      <button
-                        type="button"
-                        className="dropdown-item dropdown-sub-item"
-                        onClick={() => handleLinkClick('/auctions/upcoming?category=bank-nbfc')}
-                        id="nav-subitem-upcoming-bank"
-                      >
-                        Bank / NBFC Auctions
-                      </button>
-                      <button
-                        type="button"
-                        className="dropdown-item dropdown-sub-item"
-                        onClick={() => handleLinkClick('/auctions/upcoming?category=used-vehicle')}
-                        id="nav-subitem-upcoming-used"
-                      >
-                        Used Vehicle Auctions
-                      </button>
-                      <button
-                        type="button"
-                        className="dropdown-item dropdown-sub-item"
-                        onClick={() => handleLinkClick('/auctions/upcoming?category=used-spare-parts')}
-                        id="nav-subitem-upcoming-parts"
-                      >
-                        Used Spare Parts
-                      </button>
-                    </div>
+                {upcomingAuctionsDropdownOpen && (
+                  <div className="navbar-dropdown-menu" role="menu">
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/auctions/upcoming')}
+                      id="nav-item-all-upcoming-auctions"
+                    >
+                      All Upcoming Auctions
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/auctions/upcoming?category=insurance')}
+                      id="nav-subitem-upcoming-insurance"
+                    >
+                      Insurance Auctions
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/auctions/upcoming?category=bank-nbfc')}
+                      id="nav-subitem-upcoming-bank"
+                    >
+                      Bank / NBFC Auctions
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/auctions/upcoming?category=used-vehicle')}
+                      id="nav-subitem-upcoming-used"
+                    >
+                      Used Vehicle Auctions
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/auctions/upcoming?category=used-spare-parts')}
+                      id="nav-subitem-upcoming-parts"
+                    >
+                      Used Spare Parts
+                    </button>
                   </div>
                 )}
               </div>
@@ -614,27 +637,27 @@ export default function Navbar({
               <ArrowRight size={14} className="mobile-nav-chevron" />
             </button>
 
-            {/* Auctions Accordion */}
+            {/* Live Auctions Accordion */}
             <div className="mobile-accordion-group">
               <button
                 type="button"
-                className={`mobile-nav-item ${activeSection === 'auctions' ? 'mobile-nav-active' : ''}`}
-                onClick={() => setMobileAuctionsOpen((prev) => !prev)}
-                id="mobile-nav-link-auctions"
+                className={`mobile-nav-item ${activeSection === 'live-auctions' ? 'mobile-nav-active' : ''}`}
+                onClick={() => setMobileLiveAuctionsOpen((prev) => !prev)}
+                id="mobile-nav-link-live-auctions"
               >
                 <span className="mobile-nav-label-wrap">
-                  <span>Auctions</span>
+                  <span>Live Auctions</span>
+                  <span className="nav-live-capsule" style={{ marginLeft: '6px' }}>LIVE</span>
                 </span>
-                <ChevronDown size={14} className={`dropdown-chevron ${mobileAuctionsOpen ? 'open' : ''}`} />
+                <ChevronDown size={14} className={`dropdown-chevron ${mobileLiveAuctionsOpen ? 'open' : ''}`} />
               </button>
-              {mobileAuctionsOpen && (
+              {mobileLiveAuctionsOpen && (
                 <div className="mobile-sub-menu">
-                  <div className="mobile-sub-group-title">Live Auctions</div>
                   <button
                     type="button"
                     className="mobile-sub-item"
                     onClick={() => handleLinkClick('/auctions/live')}
-                    id="mobile-nav-item-live-auctions"
+                    id="mobile-nav-item-all-live-auctions"
                   >
                     All Live Auctions
                   </button>
@@ -654,13 +677,30 @@ export default function Navbar({
                   >
                     Bank / NBFC Auctions
                   </button>
+                </div>
+              )}
+            </div>
 
-                  <div className="mobile-sub-group-title" style={{ marginTop: '8px' }}>Upcoming Auctions</div>
+            {/* Upcoming Auctions Accordion */}
+            <div className="mobile-accordion-group">
+              <button
+                type="button"
+                className={`mobile-nav-item ${activeSection === 'upcoming-auctions' ? 'mobile-nav-active' : ''}`}
+                onClick={() => setMobileUpcomingAuctionsOpen((prev) => !prev)}
+                id="mobile-nav-link-upcoming-auctions"
+              >
+                <span className="mobile-nav-label-wrap">
+                  <span>Upcoming Auctions</span>
+                </span>
+                <ChevronDown size={14} className={`dropdown-chevron ${mobileUpcomingAuctionsOpen ? 'open' : ''}`} />
+              </button>
+              {mobileUpcomingAuctionsOpen && (
+                <div className="mobile-sub-menu">
                   <button
                     type="button"
                     className="mobile-sub-item"
                     onClick={() => handleLinkClick('/auctions/upcoming')}
-                    id="mobile-nav-item-upcoming-auctions"
+                    id="mobile-nav-item-all-upcoming-auctions"
                   >
                     All Upcoming Auctions
                   </button>
