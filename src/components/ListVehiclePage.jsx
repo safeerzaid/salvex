@@ -55,9 +55,9 @@ export default function ListVehiclePage({ onSubmitSuccess, onNavigateSellerDashb
 
     // Step 4: Seller Details
     sellerType: 'Individual Owner', // 'Individual Owner' | 'Automotive Dealer' | 'Bank / NBFC Consignor' | 'Insurance Co'
-    sellerName: 'Vikram Joshi',
-    sellerMobile: '+91 98450 11223',
-    sellerEmail: 'vikram.joshi@gmail.com',
+    sellerName: 'Demo Seller',
+    sellerMobile: '+91 00000 00000',
+    sellerEmail: 'demo.seller@example.com',
     sellerCity: 'Bengaluru',
     reservePrice: '4500000'
   });
@@ -103,7 +103,7 @@ export default function ListVehiclePage({ onSubmitSuccess, onNavigateSellerDashb
             <span className="list-pill">CONSIGNOR ONBOARDING PORTAL</span>
             <h1 className="list-title">List Your Vehicle on Salvex Auction</h1>
             <p className="list-subtitle">
-              Reach thousands of pre-qualified verified bidders, automotive dealers, and corporate fleets across India with guaranteed transparent liquidation and fast escrow payout.
+              Reach thousands of pre-qualified verified bidders, automotive dealers, and corporate fleets across India with transparent liquidation and fast payout processes (demo).
             </p>
 
             {/* Stepper Progress */}

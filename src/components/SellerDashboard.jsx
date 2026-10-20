@@ -58,17 +58,17 @@ export default function SellerDashboard({
               </div>
               <div>
                 <div className="seller-title-wrap">
-                  <h2>HDFC Bank Asset Recovery & Fleet Consignment</h2>
+                  <h2>Institutional Consignor (Demo)</h2>
                   <span className="seller-verified-pill">
-                    <ShieldCheck size={14} /> Institutional Consignor
+                    <ShieldCheck size={14} /> Institutional Consignor (Demo)
                   </span>
                 </div>
                 <div className="seller-meta-row">
-                  <span>Consignor ID: <strong>SVX-SEL-4091</strong></span>
+                  <span>Consignor ID: <strong>DEMO-SEL-4091</strong></span>
                   <span>•</span>
                   <span>Portfolio: <strong>Automotive & Equipment Liquidations</strong></span>
                   <span>•</span>
-                  <span>Settlement Rail: <strong>Corporate Escrow Direct</strong></span>
+                  <span>Settlement Rail: <strong>Secure settlement (demo)</strong></span>
                 </div>
               </div>
             </div>
@@ -111,8 +111,8 @@ export default function SellerDashboard({
 
             <div className="sstat-card">
               <span className="sstat-lbl">Settled Sales Payout</span>
-              <span className="sstat-val text-success">₹4.85 Cr</span>
-              <span className="sstat-sub">Disbursed to consignor escrow</span>
+              <span className="sstat-val text-success">₹4.85 Cr (sample)</span>
+              <span className="sstat-sub">Sample consignor settlement total</span>
             </div>
           </div>
         </div>
@@ -236,8 +236,8 @@ export default function SellerDashboard({
               <div className="seller-settlement-pane">
                 <div className="settlement-hero-box">
                   <div>
-                    <h3>Consignor Escrow Settlement Ledger</h3>
-                    <p>Net proceeds from winning bids after deducting statutory platform facilitation fees.</p>
+                    <h3>Consignor Settlement Ledger (Demo)</h3>
+                    <p>Sample net proceeds from winning bids after deducting platform facilitation fees.</p>
                   </div>
                   <button
                     type="button"
@@ -268,7 +268,7 @@ export default function SellerDashboard({
                         <td>₹53,50,000</td>
                         <td>-₹1,33,750 (2.5%)</td>
                         <td><strong className="text-success">₹52,16,250</strong></td>
-                        <td><code>HDFCR520260912004491</code></td>
+                        <td><code>DEMOR520260912004491</code></td>
                       </tr>
                     </tbody>
                   </table>

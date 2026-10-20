@@ -17,23 +17,31 @@ export default function VehicleCard({
   onPlaceBid,
   statusOverride
 }) {
-  const [remainingSeconds, setRemainingSeconds] = useState(
-    vehicle?.endsInSeconds !== undefined ? vehicle.endsInSeconds : 8075
-  );
+  const initialSeconds = vehicle?.endsInSeconds !== undefined ? vehicle.endsInSeconds : 8075;
+  const [remainingSeconds, setRemainingSeconds] = useState(Math.max(0, initialSeconds));
 
   useEffect(() => {
-    if (vehicle?.endsInSeconds !== undefined) {
-      setRemainingSeconds(vehicle.endsInSeconds);
+    const totalSec = vehicle?.endsInSeconds !== undefined ? vehicle.endsInSeconds : 8075;
+    if (totalSec <= 0) {
+      setRemainingSeconds(0);
+      return;
     }
-  }, [vehicle?.endsInSeconds]);
 
-  useEffect(() => {
-    if (!remainingSeconds || remainingSeconds <= 0) return;
-    const interval = setInterval(() => {
-      setRemainingSeconds((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [remainingSeconds]);
+    const endTimeMs = Date.now() + totalSec * 1000;
+
+    const updateTimer = () => {
+      const diffSec = Math.max(0, Math.round((endTimeMs - Date.now()) / 1000));
+      setRemainingSeconds(diffSec);
+      if (diffSec <= 0 && intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+
+    updateTimer();
+    const intervalId = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [vehicle?.id, vehicle?.endsInSeconds]);
 
   if (!vehicle) return null;
 
@@ -46,16 +54,18 @@ export default function VehicleCard({
   const isEnded =
     statusOverride === 'ENDED' ||
     vehicle.badge === 'ENDED' ||
-    remainingSeconds <= 0;
+    (remainingSeconds !== undefined && remainingSeconds <= 0);
 
   const isEndingSoon =
     !isUpcoming &&
     !isEnded &&
-    (statusOverride === 'ENDING SOON' || remainingSeconds < 7200); // under 2h
+    statusOverride === 'ENDING SOON';
 
   const isLive =
     !isUpcoming &&
     !isEnded &&
+    !isEndingSoon &&
+    remainingSeconds > 0 &&
     (statusOverride === 'LIVE' || vehicle.badge === 'LIVE' || (!statusOverride && !vehicle.badge));
 
   // Format Time: HH:MM:SS
@@ -106,7 +116,7 @@ export default function VehicleCard({
 
     // Chip 2: Inspection or Secondary Status
     if (vehicle.condition?.toLowerCase().includes('certified') || vehicle.inspectionScore) {
-      chips.push({ label: 'Certified', type: 'info' });
+      chips.push({ label: 'Inspected', type: 'info' });
     } else if (vehicle.condition?.toLowerCase().includes('repo')) {
       chips.push({ label: 'Bank Repo', type: 'warning' });
     } else {

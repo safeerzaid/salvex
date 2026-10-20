@@ -1,16 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Heart,
-  Clock,
-  MapPin,
-  Fuel,
-  Gauge,
-  ArrowRight,
-  Gavel,
   ChevronLeft,
   ChevronRight,
-  Settings2,
-  Car
+  ArrowRight
 } from 'lucide-react';
 import VehicleCard from './VehicleCard';
 
@@ -25,29 +17,6 @@ export default function LiveAuctions({
   const sliderRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-
-  const [countdowns, setCountdowns] = useState(() => {
-    const map = {};
-    vehicles.forEach((v) => {
-      map[v.id] = v.endsInSeconds;
-    });
-    return map;
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdowns((prev) => {
-        const next = { ...prev };
-        Object.keys(next).forEach((id) => {
-          if (next[id] > 0) {
-            next[id] -= 1;
-          }
-        });
-        return next;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   const updateScrollState = () => {
     if (!sliderRef.current) return;
@@ -82,24 +51,6 @@ export default function LiveAuctions({
       const scrollStep = card ? card.offsetWidth + 24 : sliderRef.current.clientWidth / 3;
       sliderRef.current.scrollBy({ left: scrollStep, behavior: 'smooth' });
     }
-  };
-
-  const formatCountdown = (totalSeconds) => {
-    if (!totalSeconds || totalSeconds <= 0) return 'Ended';
-    const hrs = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins
-      .toString()
-      .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(amount);
   };
 
   return (

@@ -14,14 +14,25 @@ import {
 } from 'lucide-react';
 import { adminMetricsData, pendingKycReviewData, sellerListingsData, liveVehiclesData } from '../data/mockVehicles';
 
-export default function AdminPanel({ onShowToast, _onNavigateVehicleDetails }) {
+export default function AdminPanel({
+  onShowToast,
+  _onNavigateVehicleDetails,
+  liveLots: propLiveLots,
+  onExtendLot
+}) {
   const [selectedRole, setSelectedRole] = useState('Super Admin');
   const [activeSection, setActiveSection] = useState('overview'); // 'overview' | 'auctions' | 'kyc' | 'vehicles' | 'payments' | 'lifting' | 'settings'
 
   // Admin Operational State
   const [kycQueue, setKycQueue] = useState(pendingKycReviewData);
   const [inventoryQueue, setInventoryQueue] = useState(sellerListingsData);
-  const [liveLots] = useState(liveVehiclesData);
+  const [liveLots, setLiveLots] = useState(propLiveLots || liveVehiclesData);
+
+  useEffect(() => {
+    if (propLiveLots) {
+      setLiveLots(propLiveLots);
+    }
+  }, [propLiveLots]);
 
   const roles = [
     'Super Admin',
@@ -55,7 +66,17 @@ export default function AdminPanel({ onShowToast, _onNavigateVehicleDetails }) {
   };
 
   const handleExtendAuction = (id, title) => {
-    if (onShowToast) onShowToast(`Anti-Sniping Overtime (+120s) added to ${title}`);
+    setLiveLots((prev) =>
+      prev.map((lot) =>
+        lot.id === id ? { ...lot, endsInSeconds: (lot.endsInSeconds || 0) + 120 } : lot
+      )
+    );
+    if (onExtendLot) {
+      onExtendLot(id, 120);
+    }
+    if (onShowToast) {
+      onShowToast(`Anti-Sniping Overtime (+120s) added to ${title}. Time extended!`);
+    }
   };
 
   return (
@@ -205,9 +226,9 @@ export default function AdminPanel({ onShowToast, _onNavigateVehicleDetails }) {
                 </div>
 
                 <div className="metric-box">
-                  <span className="m-lbl">TOTAL ESCROW INFLOW</span>
+                  <span className="m-lbl">TOTAL SETTLEMENT INFLOW (SAMPLE)</span>
                   <span className="m-val text-success">{formatCurrency(adminMetricsData.totalEscrowInflow)}</span>
-                  <span className="m-sub">Held in RBI-regulated trustee account</span>
+                  <span className="m-sub">Held in secure settlement account (demo)</span>
                 </div>
 
                 <div className="metric-box">
@@ -282,7 +303,7 @@ export default function AdminPanel({ onShowToast, _onNavigateVehicleDetails }) {
                           className="btn-admin-extend"
                           onClick={() => handleExtendAuction(v.id, `${v.make} ${v.model}`)}
                         >
-                          +120s Overtime
+                          +120s Extend
                         </button>
                       </div>
                     ))}
@@ -335,7 +356,7 @@ export default function AdminPanel({ onShowToast, _onNavigateVehicleDetails }) {
                               onClick={() => handleExtendAuction(lot.id, `${lot.make} ${lot.model}`)}
                               title="Add 120s Overtime"
                             >
-                              +2m Extend
+                              +120s Extend
                             </button>
                             <button
                               type="button"
@@ -445,7 +466,7 @@ export default function AdminPanel({ onShowToast, _onNavigateVehicleDetails }) {
                     {inventoryQueue.map((item) => (
                       <tr key={item.id}>
                         <td><strong>{item.yearMfg} {item.make} {item.model}</strong></td>
-                        <td>HDFC Consignments</td>
+                        <td>Sample Institutional Consignments</td>
                         <td>{item.location}</td>
                         <td>{formatCurrency(item.reservePrice)}</td>
                         <td><span className={`status-pill ${item.status.toLowerCase()}`}>{item.status}</span></td>
@@ -474,7 +495,7 @@ export default function AdminPanel({ onShowToast, _onNavigateVehicleDetails }) {
           {activeSection === 'payments' && (
             <div className="admin-pane">
               <div className="admin-pane-header">
-                <h2>Escrow Settlement & Reconciliation Desk</h2>
+                <h2>Settlement &amp; Reconciliation Desk (Demo)</h2>
                 <p>Match incoming RTGS transfers with pending auction invoices and authorize gate pass releases.</p>
               </div>
 
@@ -486,26 +507,26 @@ export default function AdminPanel({ onShowToast, _onNavigateVehicleDetails }) {
                       <th>Winning Bidder</th>
                       <th>Lot Description</th>
                       <th>Amount Received</th>
-                      <th>Escrow Bank</th>
+                      <th>Settlement Bank</th>
                       <th>Reconciliation</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td><code>UTR-HDFC-991204</code></td>
+                      <td><code>DEMO-UTR-991204</code></td>
                       <td>Rahul Sharma (SVX-7842)</td>
                       <td>Defender 110 V8 (won-101)</td>
                       <td><strong>₹1,62,07,400</strong></td>
-                      <td>HDFC Corporate Escrow</td>
-                      <td><span className="badge-paid">Matched & Reconciled</span></td>
+                      <td>Sample Bank Escrow (Demo)</td>
+                      <td><span className="badge-paid">Matched &amp; Reconciled</span></td>
                     </tr>
                     <tr>
-                      <td><code>UTR-AXIS-330192</code></td>
+                      <td><code>DEMO-UTR-330192</code></td>
                       <td>Kailash Autotraders</td>
                       <td>BMW 330i Luxury (won-102)</td>
                       <td><strong>₹17,91,390</strong></td>
-                      <td>Axis Escrow Trust</td>
-                      <td><span className="badge-paid">Matched & Reconciled</span></td>
+                      <td>Sample Settlement Trust (Demo)</td>
+                      <td><span className="badge-paid">Matched &amp; Reconciled</span></td>
                     </tr>
                   </tbody>
                 </table>

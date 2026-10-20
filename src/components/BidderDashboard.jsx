@@ -651,7 +651,7 @@ export default function BidderDashboard({
                         <td>₹15,00,000</td>
                         <td><span className="badge-verified">Active In Escrow</span></td>
                         <td>
-                          <button type="button" className="btn-table-action" onClick={() => onShowToast('Escrow certificate verified by Axis Bank Trust.')}>
+                          <button type="button" className="btn-table-action" onClick={() => onShowToast('Settlement certificate verified (Demo).')}>
                             Statement
                           </button>
                         </td>
@@ -768,7 +768,7 @@ export default function BidderDashboard({
                     </div>
                     <div className="yp-col">
                       <span className="yp-lbl">YARD MANAGER</span>
-                      <p>K. Senthil (+91 97910 44556)</p>
+                      <p>Yard Desk (+91 00000 00000)</p>
                     </div>
                     <div className="yp-col">
                       <span className="yp-lbl">FREE STORAGE UNTIL</span>
@@ -845,12 +845,12 @@ export default function BidderDashboard({
 
                   <div className="form-field">
                     <label>Registered Email</label>
-                    <input type="email" readOnly defaultValue="rahul.sharma@enterpriseholdings.in" />
+                    <input type="email" readOnly defaultValue="demo.bidder@example.com" />
                   </div>
 
                   <div className="form-field">
                     <label>Mobile Number (SMS Alert Enabled)</label>
-                    <input type="tel" readOnly defaultValue="+91 98451 90211" />
+                    <input type="tel" readOnly defaultValue="+91 00000 00000" />
                   </div>
 
                   <div className="form-field full-width">
@@ -858,7 +858,7 @@ export default function BidderDashboard({
                     <input
                       type="text"
                       readOnly
-                      defaultValue="HDFC Bank • A/C No: 50200049281920 • IFSC: HDFC0000128"
+                      defaultValue="Sample Bank • A/C No: 00000049281920 • IFSC: SMPL0000128"
                     />
                   </div>
                 </div>

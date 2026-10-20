@@ -99,7 +99,7 @@ export default function ContactPage({ onShowToast, onNavigate, onOpenRegister })
             {/* 1. Phone */}
             <div
               className="contact-channel-card"
-              onClick={() => handleQuickChannel('phone', '+91 80 4000 7000')}
+              onClick={() => handleQuickChannel('phone', '+91 00000 00000')}
               title="Click to call helpline"
             >
               <div className="channel-card-left">
@@ -109,7 +109,7 @@ export default function ContactPage({ onShowToast, onNavigate, onOpenRegister })
                 <div className="channel-info">
                   <span className="channel-title">Phone</span>
                   <span className="channel-sub">Speak with our team</span>
-                  <span className="channel-val">+91 80 4000 7000</span>
+                  <span className="channel-val">+91 00000 00000</span>
                 </div>
               </div>
               <ChevronRight size={18} className="channel-chevron" />
@@ -118,7 +118,7 @@ export default function ContactPage({ onShowToast, onNavigate, onOpenRegister })
             {/* 2. WhatsApp */}
             <div
               className="contact-channel-card"
-              onClick={() => handleQuickChannel('whatsapp', '+91 98450 00000')}
+              onClick={() => handleQuickChannel('whatsapp', '+91 00000 00000')}
               title="Chat on WhatsApp"
             >
               <div className="channel-card-left">
@@ -128,7 +128,7 @@ export default function ContactPage({ onShowToast, onNavigate, onOpenRegister })
                 <div className="channel-info">
                   <span className="channel-title">WhatsApp</span>
                   <span className="channel-sub">Chat with us on WhatsApp</span>
-                  <span className="channel-val">+91 98450 00000</span>
+                  <span className="channel-val">+91 00000 00000</span>
                 </div>
               </div>
               <ChevronRight size={18} className="channel-chevron" />
@@ -137,7 +137,7 @@ export default function ContactPage({ onShowToast, onNavigate, onOpenRegister })
             {/* 3. Email */}
             <div
               className="contact-channel-card"
-              onClick={() => handleQuickChannel('email', 'support@salvexauction.com')}
+              onClick={() => handleQuickChannel('email', 'demo@example.com')}
               title="Send email"
             >
               <div className="channel-card-left">
@@ -147,7 +147,7 @@ export default function ContactPage({ onShowToast, onNavigate, onOpenRegister })
                 <div className="channel-info">
                   <span className="channel-title">Email</span>
                   <span className="channel-sub">Send us an email</span>
-                  <span className="channel-val">support@salvexauction.com</span>
+                  <span className="channel-val">demo@example.com</span>
                 </div>
               </div>
               <ChevronRight size={18} className="channel-chevron" />
@@ -299,8 +299,8 @@ export default function ContactPage({ onShowToast, onNavigate, onOpenRegister })
                           <option value="Institutional Consignment">
                             Institutional Consignment (Bank / NBFC / Fleet)
                           </option>
-                          <option value="Escrow Payment Assistance">
-                            Escrow Payment Assistance
+                          <option value="Settlement Payment Assistance (Demo)">
+                            Settlement Payment Assistance (Demo)
                           </option>
                           <option value="Yard Lifting & Gate Pass">
                             Yard Lifting &amp; Gate Pass
@@ -405,8 +405,8 @@ export default function ContactPage({ onShowToast, onNavigate, onOpenRegister })
                   <div className="map-popup-card">
                     <MapPin size={22} className="popup-red-pin" />
                     <div className="popup-info">
-                      <h5>Salvex Auction</h5>
-                      <p>Plot 42-B, Industrial Area, Electronic City, Bengaluru - 560100</p>
+                      <h5>Salvex Auction (Demo Hub)</h5>
+                      <p>Demo Operations Hub, Bengaluru, Karnataka (Sample Address)</p>
                       <a
                         href="https://maps.google.com/?q=Electronic+City+Bengaluru"
                         target="_blank"
@@ -435,9 +435,9 @@ export default function ContactPage({ onShowToast, onNavigate, onOpenRegister })
 
               {/* Office Details Text & Hours below map */}
               <div className="office-details-box">
-                <h4 className="office-heading">Our Office</h4>
+                <h4 className="office-heading">Our Office (Demo Location)</h4>
                 <p className="office-address-p">
-                  Plot 42-B, Industrial Area, Electronic City Phase 1, Bengaluru, Karnataka - 560100, India
+                  Demo Operations Hub, Bengaluru, Karnataka, India (Sample Address)
                 </p>
 
                 <div className="office-hours-grid">

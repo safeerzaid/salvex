@@ -104,6 +104,15 @@ export default function Navbar({
         id="main-navbar"
       >
         {/* ==================================================================
+            SLIM ALWAYS-VISIBLE DEMO BANNER
+            ================================================================== */}
+        <div className="navbar-demo-disclaimer-strip" role="status">
+          <div className="salvex-nav-container demo-disclaimer-container">
+            <span><strong>Demo Prototype:</strong> All vehicles, bids, partners, prices and statistics are sample data. No real payments or transactions.</span>
+          </div>
+        </div>
+
+        {/* ==================================================================
             TIER 0: CRIMSON RED ANNOUNCEMENT BAR
             ================================================================== */}
         <div className="navbar-announcement-bar">
@@ -120,7 +129,7 @@ export default function Navbar({
             {/* Desktop Right */}
             <div className="announcement-right announcement-desktop">
               <Headphones size={13} className="announcement-icon" />
-              <span>Need Help? <strong>+91 98765 43210</strong></span>
+              <span>Need Help? <strong>+91 00000 00000</strong></span>
             </div>
 
             {/* Mobile Announcement Banner (425px - 320px) matching reference */}

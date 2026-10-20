@@ -41,15 +41,15 @@ export default function Footer({ onNavigate, onOpenBidderModal, onOpenSellerModa
               <div className="footer-trust-stack">
                 <div className="footer-trust-item">
                   <ShieldCheck size={14} className="footer-trust-icon" />
-                  <span>RBI Regulated Escrow Settlements</span>
+                  <span>Secure settlement (demo)</span>
                 </div>
                 <div className="footer-trust-item">
                   <BadgeCheck size={14} className="footer-trust-icon" />
-                  <span>Verified KYC Bidder Process</span>
+                  <span>Verified KYC Bidder Process (Demo)</span>
                 </div>
                 <div className="footer-trust-item">
                   <Clock size={14} className="footer-trust-icon" />
-                  <span>Live Auction Monitoring 24/7</span>
+                  <span>Demo environment</span>
                 </div>
               </div>
               <div className="footer-social-row">
@@ -88,7 +88,7 @@ export default function Footer({ onNavigate, onOpenBidderModal, onOpenSellerModa
                 {[
                   ['Register as Bidder', 'register'],
                   ['Bidding Rules', 'bidding-rules'],
-                  ['Payment & Escrow', 'payment'],
+                  ['Payment & Settlement', 'payment'],
                   ['Vehicle Lifting', 'lifting'],
                   ['FAQ', 'faq'],
                 ].map(([label, route]) => (
@@ -125,15 +125,15 @@ export default function Footer({ onNavigate, onOpenBidderModal, onOpenSellerModa
             <div className="footer-col">
               <h4 className="footer-col-heading">Contact Us</h4>
               <div className="footer-contact-list">
-                <a href="tel:+911800000000" className="footer-contact-item">
+                <a href="tel:+910000000000" className="footer-contact-item">
                   <span className="footer-contact-icon"><Phone size={13} /></span>
-                  <span>+91 1800-000-000</span>
+                  <span>+91 00000 00000</span>
                 </a>
-                <a href="mailto:support@salvexauction.in" className="footer-contact-item">
+                <a href="mailto:demo@example.com" className="footer-contact-item">
                   <span className="footer-contact-icon"><Mail size={13} /></span>
-                  <span>support@salvexauction.in</span>
+                  <span>demo@example.com</span>
                 </a>
-                <a href="https://wa.me/911800000000" className="footer-contact-item">
+                <a href="https://wa.me/910000000000" className="footer-contact-item">
                   <span className="footer-contact-icon footer-wa-icon"><MessageCircle size={13} /></span>
                   <span>WhatsApp Support</span>
                 </a>
@@ -164,14 +164,12 @@ export default function Footer({ onNavigate, onOpenBidderModal, onOpenSellerModa
           {/* BOTTOM BAR */}
           <div className="footer-bottom-bar">
             <div className="footer-bottom-left">
-              <span>© {year} Salvex Auction Pvt. Ltd. All rights reserved.</span>
-              <span className="footer-bottom-sep">•</span>
-              <span>CIN: U12345MH2020PTC123456</span>
+              <span>© {year} Salvex Auction (Demo Prototype). All rights reserved.</span>
             </div>
             <div className="footer-bottom-right">
-              <span>Online Vehicle Auction Platform</span>
+              <span>Online Vehicle Auction Platform (Demo)</span>
               <span className="footer-bottom-sep">•</span>
-              <span>Certified Institutional Liquidation Services</span>
+              <span>Sample Institutional Liquidation Services</span>
               <button className="footer-admin-link" onClick={() => onNavigate('admin')}>
                 Admin →
               </button>

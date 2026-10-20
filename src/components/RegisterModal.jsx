@@ -12,8 +12,6 @@ import {
 import SalvexLogo from './SalvexLogo';
 
 export default function RegisterModal({ isOpen, onClose }) {
-  if (!isOpen) return null;
-
   // Step 1 to 6
   const [currentStep, setCurrentStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -83,13 +81,13 @@ export default function RegisterModal({ isOpen, onClose }) {
     if (currentStep === 4) {
       // ID Proof
       if (!formData.idFileName) {
-        formData.idFileName = 'aadhaar_doc_verified.pdf';
+        setFormData((prev) => ({ ...prev, idFileName: 'aadhaar_doc_verified.pdf' }));
       }
     }
     // Step 5 Validation
     if (currentStep === 5) {
       if (formData.hasPcc === 'yes' && !formData.pccFileName) {
-        formData.pccFileName = 'pcc_clearance_cert.pdf';
+        setFormData((prev) => ({ ...prev, pccFileName: 'pcc_clearance_cert.pdf' }));
       }
     }
     // Step 6 Submit
@@ -110,6 +108,8 @@ export default function RegisterModal({ isOpen, onClose }) {
     setCurrentStep((prev) => Math.max(1, prev - 1));
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-card modal-register-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
@@ -122,7 +122,7 @@ export default function RegisterModal({ isOpen, onClose }) {
               Buyer Registration
             </h3>
             <p className="modal-subtitle">
-              Verify your identity to bid on live, bank-repossessed and insurance salvage auctions.
+              Verify your identity to explore bank-repossessed and insurance salvage demo auctions.
             </p>
           </div>
           <button type="button" className="modal-close-btn" onClick={onClose} aria-label="Close dialog">
@@ -139,7 +139,7 @@ export default function RegisterModal({ isOpen, onClose }) {
               Registration Completed!
             </h4>
             <p style={{ fontSize: '14px', color: '#64748B', lineHeight: '22px', maxWidth: '420px', margin: '0 auto 24px auto' }}>
-              Welcome to Salvex Auction, <strong>{formData.name}</strong>. Your KYC &amp; Verification packet has been logged under Bidder ID <strong>SVX-{(Math.floor(1000 + Math.random() * 9000))}</strong>. You can now place live bids.
+              Welcome to Salvex Auction (Demo), <strong>{formData.name}</strong>. Your profile has been recorded under Demo Bidder ID <strong>DEMO-{(Math.floor(1000 + Math.random() * 9000))}</strong>. You can now place demo bids.
             </p>
             <button
               type="button"
@@ -207,7 +207,7 @@ export default function RegisterModal({ isOpen, onClose }) {
                       <input
                         id="reg-mobile"
                         type="tel"
-                        placeholder="+91 98765 43210"
+                        placeholder="+91 00000 00000"
                         className="field-input"
                         value={formData.mobile}
                         onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
@@ -219,7 +219,7 @@ export default function RegisterModal({ isOpen, onClose }) {
                       <input
                         id="reg-email"
                         type="email"
-                        placeholder="rahul.sharma@example.com"
+                        placeholder="demo@example.com"
                         className="field-input"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}

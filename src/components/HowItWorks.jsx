@@ -18,7 +18,7 @@ const HOW_IT_WORKS_STEPS = [
   {
     number: '02',
     title: 'Discover & Inspect',
-    description: 'Browse verified lots with comprehensive 150-point diagnostic reports.',
+    description: 'Browse lots with comprehensive sample multi-point diagnostic reports.',
     icon: Search
   },
   {
@@ -36,7 +36,7 @@ const HOW_IT_WORKS_STEPS = [
   {
     number: '05',
     title: 'Secure Settlement',
-    description: 'Remit payments safely through RBI-authorized escrow banking channels.',
+    description: 'Remit payments safely through secure settlement (demo).',
     icon: CreditCard
   },
   {

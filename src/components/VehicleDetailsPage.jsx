@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import './VehicleDetailsPage.css';
 import VehicleCard from './VehicleCard';
+import { BID_INCREMENT } from '../constants';
 
 export default function VehicleDetailsPage({
   vehicle,
@@ -33,9 +34,12 @@ export default function VehicleDetailsPage({
   onViewVehicleDetails,
   similarVehicles = []
 }) {
+  const vehicleTitle = [vehicle?.yearMfg || vehicle?.year, vehicle?.make, vehicle?.model].filter(Boolean).join(' ') || 'Vehicle Details';
+  const mainImage = vehicle?.image || '/images/defender-110.jpg';
+
   // 5 compact gallery photos
   const galleryImages = [
-    { id: 1, label: 'Front View', url: vehicle?.image || '/images/defender-110.jpg', tag: 'Front' },
+    { id: 1, label: 'Front View', url: mainImage, tag: 'Front' },
     { id: 2, label: 'Rear Angle', url: 'https://images.unsplash.com/photo-1541348263662-e0c8de4259ba?auto=format&fit=crop&w=1200&q=80', tag: 'Rear' },
     { id: 3, label: 'Side Profile', url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80', tag: 'Side' },
     { id: 4, label: 'Interior', url: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1200&q=80', tag: 'Interior' },
@@ -52,23 +56,49 @@ export default function VehicleDetailsPage({
   const [isBidConfirmOpen, setIsBidConfirmOpen] = useState(false);
 
   // Live Auction Parameters
-  const [currentBid, setCurrentBid] = useState(vehicle?.currentBid || 16200000);
-  const [bidCount, setBidCount] = useState(vehicle?.bidCount || 24);
-  const startingBid = vehicle?.startingBid || 14500000;
-  const minIncrement = 100000; // ₹1,00,000
+  const startingBid = vehicle?.startingBid || 0;
+  const minIncrement = BID_INCREMENT;
+  const [currentBid, setCurrentBid] = useState(vehicle?.currentBid || vehicle?.startingBid || 0);
+  const [bidCount, setBidCount] = useState(vehicle?.bidCount ?? 0);
   const minNextBid = currentBid + minIncrement;
   const [bidAmount, setBidAmount] = useState(minNextBid);
   const [bidSuccessToast, setBidSuccessToast] = useState(null);
 
-  // Live countdown timer (4h 14m 51s = 15291 seconds)
-  const [secondsRemaining, setSecondsRemaining] = useState(15291);
+  useEffect(() => {
+    if (vehicle) {
+      const base = vehicle.currentBid || vehicle.startingBid || 0;
+      setCurrentBid(base);
+      setBidCount(vehicle.bidCount ?? 0);
+      setBidAmount(base + minIncrement);
+    }
+  }, [vehicle?.id, vehicle?.currentBid, vehicle?.startingBid, vehicle?.bidCount]);
+
+  // Live countdown timer - computed from target end time to remain accurate across tabs
+  const initialEndsIn = vehicle?.endsInSeconds !== undefined ? vehicle.endsInSeconds : 15291;
+  const [secondsRemaining, setSecondsRemaining] = useState(Math.max(0, initialEndsIn));
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setSecondsRemaining((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+    const totalSec = vehicle?.endsInSeconds !== undefined ? vehicle.endsInSeconds : 15291;
+    if (totalSec <= 0) {
+      setSecondsRemaining(0);
+      return;
+    }
+
+    const endTimeMs = Date.now() + totalSec * 1000;
+
+    const updateTimer = () => {
+      const diffSec = Math.max(0, Math.round((endTimeMs - Date.now()) / 1000));
+      setSecondsRemaining(diffSec);
+      if (diffSec <= 0 && timerId) {
+        clearInterval(timerId);
+      }
+    };
+
+    updateTimer();
+    const timerId = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(timerId);
+  }, [vehicle?.id, vehicle?.endsInSeconds]);
 
   const formatCountdown = (totalSec) => {
     const h = Math.floor((totalSec % 86400) / 3600);
@@ -92,6 +122,10 @@ export default function VehicleDetailsPage({
   // Pre-validate and open Confirmation Modal
   const handleInitiateBid = (e) => {
     e.preventDefault();
+    if (secondsRemaining <= 0) {
+      alert('This auction has ended. Bidding is permanently closed for this lot.');
+      return;
+    }
     if (bidAmount < minNextBid) {
       alert(`Your bid must meet or exceed the minimum next bid of ${formatCurrency(minNextBid)}`);
       return;
@@ -165,7 +199,7 @@ export default function VehicleDetailsPage({
               Live Auctions
             </button>
             <span className="crumb-slash">/</span>
-            <span className="crumb-active">Land Rover Defender 110 V8 5.0L</span>
+            <span className="crumb-active">{vehicleTitle}</span>
           </div>
         </div>
       </nav>
@@ -180,28 +214,34 @@ export default function VehicleDetailsPage({
               <div className="gallery-main-frame">
                 <img
                   src={galleryImages[activeImageIndex].url}
-                  alt={`Land Rover Defender 110 - ${galleryImages[activeImageIndex].label}`}
+                  alt={`${vehicleTitle} - ${galleryImages[activeImageIndex].label}`}
                   className="gallery-active-image"
                   onError={(e) => {
-                    e.currentTarget.src = '/images/defender-110.jpg';
+                    e.currentTarget.src = mainImage;
                   }}
                 />
 
                 {/* LIVE AUCTION Tag (Top Left) */}
                 <div className="gallery-live-tag">
-                  <span className="live-tag-pulse" />
-                  <span>LIVE AUCTION</span>
+                  {secondsRemaining > 0 ? (
+                    <>
+                      <span className="live-tag-pulse" />
+                      <span>LIVE AUCTION</span>
+                    </>
+                  ) : (
+                    <span>AUCTION ENDED</span>
+                  )}
                 </div>
 
                 {/* Top Right: Counter & Save/Share Icons */}
                 <div className="gallery-top-right-group">
                   <span className="gallery-counter-pill">
-                    {activeImageIndex + 1} / 24
+                    {activeImageIndex + 1} / {galleryImages.length}
                   </span>
                   <button
                     type="button"
                     className={`gallery-save-btn ${isSaved ? 'save-btn-active' : ''}`}
-                    onClick={() => onToggleSave && onToggleSave(vehicle?.id || 'salvex-103')}
+                    onClick={() => onToggleSave && vehicle?.id && onToggleSave(vehicle.id)}
                     title={isSaved ? 'Remove from saved' : 'Save vehicle'}
                     aria-label="Save to watchlist"
                   >
@@ -266,7 +306,7 @@ export default function VehicleDetailsPage({
                         alt={thumb.label}
                         className="thumb-slot-img"
                         onError={(e) => {
-                          e.currentTarget.src = '/images/defender-110.jpg';
+                          e.currentTarget.src = mainImage;
                         }}
                       />
                       {isLast ? (
@@ -285,15 +325,15 @@ export default function VehicleDetailsPage({
             {/* COLUMN 2: VEHICLE INFORMATION (CENTER 28%) */}
             <div className="info-column">
               <h1 className="vehicle-title-text">
-                Land Rover Defender 110 V8 5.0L
+                {vehicleTitle}
               </h1>
 
               <div className="vehicle-sub-meta">
-                <span>Mfg: 2023</span>
+                <span>Mfg: {vehicle?.yearMfg || vehicle?.year || 'Not available'}</span>
                 <span className="meta-sep">·</span>
-                <span>Reg: 2023</span>
+                <span>Reg: {vehicle?.yearReg || vehicle?.yearMfg || vehicle?.year || 'Not available'}</span>
                 <span className="meta-sep">·</span>
-                <span className="stock-id-badge">SVX-45892</span>
+                <span className="stock-id-badge">Lot: {vehicle?.id ? vehicle.id.toUpperCase() : 'Not available'}</span>
               </div>
 
               {/* Compact 2 × 2 Specification Layout */}
@@ -302,7 +342,7 @@ export default function VehicleDetailsPage({
                   <span className="key-spec-label">Fuel</span>
                   <div className="key-spec-val-row">
                     <Fuel size={13} className="spec-val-icon" />
-                    <span className="key-spec-value">Petrol</span>
+                    <span className="key-spec-value">{vehicle?.fuel || 'Not available'}</span>
                   </div>
                 </div>
 
@@ -310,7 +350,7 @@ export default function VehicleDetailsPage({
                   <span className="key-spec-label">Transmission</span>
                   <div className="key-spec-val-row">
                     <Settings2 size={13} className="spec-val-icon" />
-                    <span className="key-spec-value">8-Speed Automatic</span>
+                    <span className="key-spec-value">{vehicle?.transmission || 'Not available'}</span>
                   </div>
                 </div>
 
@@ -318,7 +358,7 @@ export default function VehicleDetailsPage({
                   <span className="key-spec-label">KM Driven</span>
                   <div className="key-spec-val-row">
                     <Gauge size={13} className="spec-val-icon" />
-                    <span className="key-spec-value">18,650 KM</span>
+                    <span className="key-spec-value">{vehicle?.kmDriven || 'Not available'}</span>
                   </div>
                 </div>
 
@@ -326,7 +366,7 @@ export default function VehicleDetailsPage({
                   <span className="key-spec-label">Location</span>
                   <div className="key-spec-val-row">
                     <MapPin size={13} className="spec-val-icon" />
-                    <span className="key-spec-value">Bengaluru, KA</span>
+                    <span className="key-spec-value">{vehicle?.location || 'Not available'}</span>
                   </div>
                 </div>
               </div>
@@ -335,26 +375,26 @@ export default function VehicleDetailsPage({
               <div className="condition-badges-row">
                 <span className="cond-badge cond-success">
                   <CheckCircle2 size={12} />
-                  Good Condition
+                  {vehicle?.condition || 'Not available'}
                 </span>
                 <span className="cond-badge cond-inspected">
                   <ShieldCheck size={12} />
-                  Inspected
+                  {vehicle?.inspectionScore ? `Inspected (${vehicle.inspectionScore})` : 'Inspected'}
                 </span>
                 <span className="cond-badge cond-info">
                   <FileCheck size={12} />
-                  RC Original Available
+                  {vehicle?.rcStatus || 'Not available'}
                 </span>
               </div>
 
               {/* ACCIDENT / DAMAGE DETAILS (IMPORTANT FOR SALVEX TRANSPARENCY) */}
               <div className="salvex-damage-disclosure-card">
                 <div className="damage-badge-row">
-                  <span className="cond-badge cond-damage-status">Minor Damage</span>
-                  <span className="damage-overall-status">Condition: <strong>Good Condition</strong></span>
+                  <span className="cond-badge cond-damage-status">{vehicle?.condition || 'Not available'}</span>
+                  <span className="damage-overall-status">Condition: <strong>{vehicle?.condition || 'Not available'}</strong></span>
                 </div>
                 <p className="damage-desc-text">
-                  <strong>Damage Details:</strong> Minor scratches on front bumper and right side panel. No frame or structural deformation.
+                  <strong>Damage / Asset Details:</strong> {vehicle?.damageDescription || vehicle?.description || 'Minor cosmetic surface blemishes typical of pre-owned inventory. No structural impairment noted in preliminary intake inspection.'}
                 </p>
                 <button
                   type="button"
@@ -368,8 +408,10 @@ export default function VehicleDetailsPage({
               {/* Short Description */}
               <div className="short-description-block">
                 <p className="desc-text">
-                  2023 Land Rover Defender 110 V8 5.0L with 18,650 KM, original RC and verified inspection.
-                  {isReadMore && ' Carpathian Grey exterior, full service history, single corporate lease owner with complete verified title.'}
+                  {vehicle?.description || `${vehicleTitle} with ${vehicle?.kmDriven || 'documented mileage'}, original title documentation and verified inspection checklist.`}
+                  {isReadMore && vehicle?.engine && ` Engine: ${vehicle.engine}.`}
+                  {isReadMore && vehicle?.exteriorColor && ` Color: ${vehicle.exteriorColor}.`}
+                  {isReadMore && vehicle?.interiorColor && ` Interior: ${vehicle.interiorColor}.`}
                 </p>
                 <button
                   type="button"
@@ -387,13 +429,19 @@ export default function VehicleDetailsPage({
                 {/* Header: LIVE AUCTION + Countdown */}
                 <div className="panel-header-bar">
                   <div className="panel-live-pill">
-                    <span className="pulse-red-dot" />
-                    <span>LIVE AUCTION</span>
+                    {secondsRemaining > 0 ? (
+                      <>
+                        <span className="pulse-red-dot" />
+                        <span>LIVE AUCTION</span>
+                      </>
+                    ) : (
+                      <span>AUCTION ENDED</span>
+                    )}
                   </div>
 
                   <div className="panel-countdown-tag">
-                    <span className="countdown-lbl">ENDS IN</span>
-                    <span className="countdown-val">{formatCountdown(secondsRemaining)}</span>
+                    <span className="countdown-lbl">{secondsRemaining > 0 ? 'ENDS IN' : 'STATUS'}</span>
+                    <span className="countdown-val">{secondsRemaining > 0 ? formatCountdown(secondsRemaining) : 'ENDED'}</span>
                   </div>
                 </div>
 
@@ -401,11 +449,11 @@ export default function VehicleDetailsPage({
                 <div className="auction-timing-strip">
                   <div className="timing-col">
                     <span className="timing-label">Auction Start:</span>
-                    <span className="timing-value">28 Sep 2026 · 10:00 AM</span>
+                    <span className="timing-value">Scheduled Today</span>
                   </div>
                   <div className="timing-col text-right">
                     <span className="timing-label">Auction End:</span>
-                    <span className="timing-value">30 Sep 2026 · 04:14 PM</span>
+                    <span className="timing-value">{secondsRemaining > 0 ? `In ${formatCountdown(secondsRemaining)}` : 'Closed'}</span>
                   </div>
                 </div>
 
@@ -543,51 +591,51 @@ export default function VehicleDetailsPage({
                 <div className="compact-2col-specs-grid">
                   <div className="spec-row-item">
                     <span className="spec-k">Make</span>
-                    <span className="spec-v">Land Rover</span>
+                    <span className="spec-v">{vehicle?.make || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">Model</span>
-                    <span className="spec-v">Defender 110 V8 5.0L</span>
+                    <span className="spec-v">{vehicle?.model || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">Manufacturing Year</span>
-                    <span className="spec-v">2023</span>
+                    <span className="spec-v">{vehicle?.yearMfg || vehicle?.year || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">Registration Year</span>
-                    <span className="spec-v">2023</span>
+                    <span className="spec-v">{vehicle?.yearReg || vehicle?.yearMfg || vehicle?.year || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">Fuel Type</span>
-                    <span className="spec-v">Petrol</span>
+                    <span className="spec-v">{vehicle?.fuel || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">Transmission</span>
-                    <span className="spec-v">8-Speed Automatic</span>
+                    <span className="spec-v">{vehicle?.transmission || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">KM Driven</span>
-                    <span className="spec-v">18,650 KM</span>
+                    <span className="spec-v">{vehicle?.kmDriven || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">Body Type</span>
-                    <span className="spec-v">SUV</span>
+                    <span className="spec-v">{vehicle?.category || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">Color</span>
-                    <span className="spec-v">Carpathian Grey</span>
+                    <span className="spec-v">{vehicle?.exteriorColor || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">Ownership</span>
-                    <span className="spec-v">Single Owner</span>
+                    <span className="spec-v">{vehicle?.source || vehicle?.ownership || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">Location</span>
-                    <span className="spec-v">Bengaluru, Karnataka</span>
+                    <span className="spec-v">{vehicle?.location || 'Not available'}</span>
                   </div>
                   <div className="spec-row-item">
                     <span className="spec-k">RC Status</span>
-                    <span className="spec-v">Original Available (KA-03)</span>
+                    <span className="spec-v">{vehicle?.rcStatus || 'Not available'}</span>
                   </div>
                 </div>
               </div>
@@ -598,7 +646,7 @@ export default function VehicleDetailsPage({
               <div className="tab-pane-inner">
                 <div className="inspection-top-summary">
                   <div className="insp-summary-left">
-                    <span className="insp-status-tag">Status: <strong>Verified</strong></span>
+                    <span className="insp-status-tag">Status: <strong>Completed (Sample)</strong></span>
                     <span className="insp-score-tag">Inspection Score: <strong>92 / 100</strong></span>
                   </div>
                   <button
@@ -606,7 +654,7 @@ export default function VehicleDetailsPage({
                     className="btn-text-action"
                     onClick={() => setIsInspectionModalOpen(true)}
                   >
-                    <span>View Full Inspection Report →</span>
+                    <span>View Sample Inspection Report →</span>
                   </button>
                 </div>
 
@@ -654,9 +702,9 @@ export default function VehicleDetailsPage({
                   <div className="insp-compact-cell">
                     <div className="insp-cell-head">
                       <span className="cell-cat">Documents</span>
-                      <span className="pill-pass">Verified</span>
+                      <span className="pill-pass">Available</span>
                     </div>
-                    <p className="cell-note">Original smart RC card verified with Parivahan records, single owner.</p>
+                    <p className="cell-note">Original smart RC card on record (sample), single owner.</p>
                   </div>
                 </div>
               </div>
@@ -668,7 +716,9 @@ export default function VehicleDetailsPage({
                 <div className="auction-parameters-grid">
                   <div className="auction-field-item">
                     <span className="af-label">Auction Status</span>
-                    <span className="af-val text-live-red">● Live Bidding Open</span>
+                    <span className={`af-val ${secondsRemaining > 0 ? 'text-live-red' : ''}`}>
+                      {secondsRemaining > 0 ? '● Live Bidding Open' : '● Bidding Closed (Ended)'}
+                    </span>
                   </div>
                   <div className="auction-field-item">
                     <span className="af-label">Starting Bid</span>
@@ -676,7 +726,7 @@ export default function VehicleDetailsPage({
                   </div>
                   <div className="auction-field-item">
                     <span className="af-label">Auction Start</span>
-                    <span className="af-val">28 Sep 2026 · 10:00 AM IST</span>
+                    <span className="af-val">Scheduled Today · 10:00 AM IST</span>
                   </div>
                   <div className="auction-field-item">
                     <span className="af-label">Minimum Bid Increment</span>
@@ -684,7 +734,7 @@ export default function VehicleDetailsPage({
                   </div>
                   <div className="auction-field-item">
                     <span className="af-label">Auction End</span>
-                    <span className="af-val">30 Sep 2026 · 04:14 PM IST</span>
+                    <span className="af-val">{secondsRemaining > 0 ? `In ${formatCountdown(secondsRemaining)}` : 'Closed'}</span>
                   </div>
                   <div className="auction-field-item">
                     <span className="af-label">Payment Deadline</span>
@@ -831,7 +881,7 @@ export default function VehicleDetailsPage({
                     </div>
                     <div className="loc-meta-item">
                       <span className="loc-lbl">Yard Helpdesk:</span>
-                      <span className="loc-val">+91 1800-000-000 • yard.ops@salvexauction.in</span>
+                      <span className="loc-val">+91 00000 00000 • demo@example.com</span>
                     </div>
                     <div style={{ marginTop: '14px' }}>
                       <a
@@ -1030,7 +1080,7 @@ export default function VehicleDetailsPage({
                   <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0B1220', margin: 0 }}>
                     Confirm Your Bid
                   </h3>
-                  <span style={{ fontSize: '11px', color: '#64748B' }}>Land Rover Defender 110 V8 5.0L</span>
+                  <span style={{ fontSize: '11px', color: '#64748B' }}>{vehicleTitle}</span>
                 </div>
               </div>
               <button
@@ -1110,7 +1160,7 @@ export default function VehicleDetailsPage({
           <div className="fs-content-box">
             <div className="fs-header">
               <span className="fs-title">
-                Land Rover Defender 110 V8 ({activeImageIndex + 1} / {galleryImages.length})
+                {vehicleTitle} ({activeImageIndex + 1} / {galleryImages.length})
               </span>
               <button
                 type="button"
@@ -1176,14 +1226,14 @@ export default function VehicleDetailsPage({
             <div className="modal-body-form" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
               <div className="insp-modal-summary">
                 <div className="summary-score-large">
-                  <span className="score-val">92</span>
+                  <span className="score-val">{vehicle?.inspectionScore ? vehicle.inspectionScore.split('/')[0] : '92'}</span>
                   <span className="score-max">/100</span>
                   <span className="score-desc">Grade A</span>
                 </div>
                 <div className="summary-texts">
-                  <p className="vehicle-name-insp">Land Rover Defender 110 V8 5.0L</p>
-                  <p className="chassis-num">VIN / Chassis: SALWR2V84PA45892</p>
-                  <p className="engine-num">Engine: AJ133-50SC-9824</p>
+                  <p className="vehicle-name-insp">{vehicleTitle}</p>
+                  <p className="chassis-num">VIN / Chassis: {vehicle?.chassis || vehicle?.rto || 'Verified in Registry'}</p>
+                  <p className="engine-num">Engine: {vehicle?.engine || 'Verified'}</p>
                 </div>
               </div>
 
@@ -1193,7 +1243,7 @@ export default function VehicleDetailsPage({
                   Damage Observation Log:
                 </span>
                 <p style={{ fontSize: '12.5px', color: '#92400E', margin: 0, lineHeight: '18px' }}>
-                  Minor surface clear-coat scratches noted on the front plastic bumper apron and right side wheel arch cladding. Zero denting or structural compromise. Airbag system intact and un-deployed.
+                  {vehicle?.damageDescription || vehicle?.description || 'Minor cosmetic surface blemishes typical of pre-owned inventory. No structural impairment noted in preliminary intake inspection.'}
                 </p>
               </div>
 
@@ -1265,7 +1315,7 @@ export default function VehicleDetailsPage({
               <div className="rule-item-detail">
                 <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#0B1220' }}>1. Bid Validity &amp; Finality</h4>
                 <p style={{ fontSize: '13px', color: '#64748B', lineHeight: '20px' }}>
-                  All submitted bids are legally binding and non-cancellable. The highest bidder at auction close enters an irrevocable purchase commitment.
+                  Platform Demo: Bids placed during demo mode are simulated sample offers. In production, bids are legally binding upon auction close.
                 </p>
               </div>
               <div className="rule-item-detail" style={{ marginTop: '12px' }}>
@@ -1277,7 +1327,7 @@ export default function VehicleDetailsPage({
               <div className="rule-item-detail" style={{ marginTop: '12px' }}>
                 <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#0B1220' }}>3. Earnest Money Deposit &amp; Full Settlement</h4>
                 <p style={{ fontSize: '13px', color: '#64748B', lineHeight: '20px' }}>
-                  The winning bidder must remit a 10% Earnest Money Deposit within 24 hours of auction close. The remaining 90% balance must be settled within 48 hours via authorized Escrow wire transfer.
+                  The winning bidder must remit a 10% Earnest Money Deposit within 24 hours of auction close. The remaining 90% balance must be settled within 48 hours via authorized secure settlement wire transfer (demo).
                 </p>
               </div>
               <div className="rule-item-detail" style={{ marginTop: '12px' }}>

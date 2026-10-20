@@ -21,24 +21,24 @@ import './AboutPage.css';
 export default function AboutPage({ onExploreClick, onRegisterClick }) {
   const stats = [
     {
-      value: '10K+',
+      value: '10K+ (sample)',
       label: 'Vehicles Auctioned',
-      sub: 'Verified transactions across India'
+      sub: 'Projected transactions across India'
     },
     {
-      value: '5K+',
+      value: '5K+ (sample)',
       label: 'Registered Bidders',
       sub: 'Dealers, rebuilders & retail buyers'
     },
     {
-      value: '98%',
+      value: '98% (sample)',
       label: 'Successful Settlement',
-      sub: 'Protected with RBI escrow conduits'
+      sub: 'Secure settlement framework'
     },
     {
-      value: '50+',
+      value: '50+ (sample)',
       label: 'Inspection Hubs',
-      sub: 'Pan-India regional yard facilities'
+      sub: 'Planned regional yard facilities'
     }
   ];
 
@@ -169,10 +169,10 @@ export default function AboutPage({ onExploreClick, onRegisterClick }) {
                   <strong>Automotive Dealers & Fleet Operators:</strong> Efficiently procure high-yield commercial and passenger vehicle stock with verifiable title trails.
                 </li>
                 <li>
-                  <strong>Independent Buyers & Rebuilders:</strong> Acquire salvage, project, and clear-title used vehicles with verified 150-point diagnostic disclosures.
+                  <strong>Independent Buyers & Rebuilders:</strong> Acquire salvage, project, and clear-title used vehicles with detailed diagnostic condition checklists.
                 </li>
                 <li>
-                  <strong>Certified Professional Bidders:</strong> Participate in scheduled live auctions with anti-sniping protection and real-time terminal controls.
+                  <strong>Professional Bidders:</strong> Participate in scheduled live auctions with anti-sniping protection and auction terminal controls.
                 </li>
               </ul>
             </div>
@@ -249,10 +249,10 @@ export default function AboutPage({ onExploreClick, onRegisterClick }) {
                   'Salvage & Damaged Vehicle Listings',
                   'Used Vehicle Fleet Auctions',
                   'Transparent Real-Time Bidding',
-                  '150-Point Physical Inspection Reports',
-                  'Statutory Online KYC Verification',
+                  'Multi-Point Yard Inspection Reports (Sample)',
+                  'Online KYC Verification (Demo)',
                   'Live & Scheduled Bidding Timelines',
-                  'RBI Regulated Escrow Settlements'
+                  'Secure settlement (demo)'
                 ].map((item, i) => (
                   <div key={i} className="offer-check-pill">
                     <CheckCircle2 size={16} className="text-accent-blue" />
@@ -269,7 +269,7 @@ export default function AboutPage({ onExploreClick, onRegisterClick }) {
                 Traditional automotive auctions have historically been fragmented, regional, and opaque. Our approach is to make vehicle auctions more accessible, transparent, and legally sound through a modern digital auction experience.
               </p>
               <p>
-                By digitizing vehicle inspections, verifying bidder identities with statutory KYC, and conducting auctions through RBI-regulated escrow banking rails, we eliminate fraudulent bids and empower buyers with dependable vehicle clarity.
+                By digitizing vehicle inspection frameworks, verifying bidder identities, and providing structured settlement processes, we empower buyers with dependable vehicle clarity.
               </p>
 
               <div className="approach-button-group">

@@ -43,21 +43,21 @@ export default function BiddingRulesPage({ onRegisterClick }) {
       title: '4. Bid Cancellation & Irrevocability Policy',
       icon: Ban,
       content:
-        'All bids placed on Salvex Auction constitute an irrevocable, legally binding offer to purchase the specified vehicle. Bids cannot be canceled, withdrawn, or amended downwards once registered in the system ledger. Bidders are urged to verify their finances and vehicle inspect report prior to bidding.'
+        'Platform Demo: Bids placed during demo mode are simulated sample offers. In production, bids cannot be canceled, withdrawn, or amended downwards once registered. Bidders are advised to verify vehicle inspection reports prior to bidding.'
     },
     {
       id: 'payment-deadline',
-      title: '5. Payment Deadlines & Escrow Remittance',
+      title: '5. Payment Deadlines & Settlement Remittance (Demo)',
       icon: CalendarCheck,
       content:
-        'Winning bidders must deposit a mandatory 10% Earnest Money Deposit (EMD) within 24 hours of auction close. The remaining 90% balance, together with buyer’s premium and statutory GST, must be remitted within 48 hours via RTGS/NEFT to the designated Salvex Escrow Trust account.'
+        'Winning bidders must deposit a mandatory 10% Earnest Money Deposit (EMD) within 24 hours of auction close. The remaining 90% balance, together with buyer’s premium and statutory GST, must be remitted within 48 hours via RTGS/NEFT to the designated institutional settlement account.'
     },
     {
       id: 'inspection',
       title: '6. Vehicle Inspection & "As-Is, Where-Is" Terms',
       icon: Search,
       content:
-        'All salvage, damaged, and repossessed auction lots are auctioned strictly on an "As-Is, Where-Is" basis with all faults and damage. While Salvex provides certified 150-point inspection logs and HD defect photography, bidders are encouraged to perform physical yard inspections during authorized pre-auction windows.'
+        'All salvage, damaged, and repossessed auction lots are auctioned strictly on an "As-Is, Where-Is" basis with all faults and damage. While Salvex displays sample multi-point inspection checklists and defect photography, bidders are encouraged to perform physical yard inspections during authorized pre-auction windows.'
     },
     {
       id: 'purchase-terms',

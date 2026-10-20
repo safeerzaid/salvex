@@ -149,7 +149,7 @@ export default function LiveAuctionsPage({
             <div className="live-hero-left">
               <h1 className="live-hero-title">Live Vehicle Auctions</h1>
               <p className="live-hero-subtitle">
-                Place transparent bids on verified bank repossessions, insurance salvage, and corporate asset liquidations in live certified online auctions with instant escrow settlement.
+                Browse sample vehicle lots including bank consignments, insurance salvage, and corporate asset liquidations in demo online auctions with secure settlement (demo).
               </p>
             </div>
           </div>
@@ -363,13 +363,13 @@ export default function LiveAuctionsPage({
                 <ShieldCheck size={24} className="text-auction-red" />
               </div>
               <div>
-                <h4>Official Salvex Live Auction Protocols & Institutional Assurance</h4>
-                <p>All bids submitted are irrevocable legal contracts governed by the SARFAESI Act and Indian Contract Act 1872.</p>
+                <h4>Salvex Auction Protocols & Platform Overview (Demo)</h4>
+                <p>Demonstration platform — bids placed during demo mode are sample entries for UI testing.</p>
               </div>
             </div>
             <div className="rules-banner-status">
               <span className="escrow-verified-pill">
-                <span className="check-dot">✓</span> RBI Authorized Escrow Conduit
+                <span className="check-dot">✓</span> Secure settlement (demo)
               </span>
             </div>
           </div>
@@ -377,8 +377,8 @@ export default function LiveAuctionsPage({
           <div className="rules-pillars-grid">
             <div className="rule-pillar-card">
               <div className="pillar-num">01</div>
-              <h5>120-Point Yard Verification</h5>
-              <p>Every lot undergoes digital OBD diagnostic scans, engine compression check, chassis alignment verification, and flood-damage tests.</p>
+              <h5>Standardized Yard Inspection (Sample)</h5>
+              <p>Sample inspection protocol outlining diagnostic checks, engine health, chassis verification, and condition reports.</p>
             </div>
 
             <div className="rule-pillar-card">
@@ -389,14 +389,14 @@ export default function LiveAuctionsPage({
 
             <div className="rule-pillar-card">
               <div className="pillar-num">03</div>
-              <h5>100% Escrow Protection</h5>
-              <p>Earnest Money Deposits (EMD) remain in institutional escrow accounts. Outbid participants receive immediate 100% deposit returns within 24 hours.</p>
+              <h5>Secure Deposit Protection (Demo)</h5>
+              <p>Planned security deposit framework designed for registered participants with automated refund workflows.</p>
             </div>
 
             <div className="rule-pillar-card">
               <div className="pillar-num">04</div>
-              <h5>Clear Title & Interstate NOC</h5>
-              <p>Complete documentation guarantee with bank release letters, Form 29/30 transfer sets, and expedited RTO clearance assistance across 28 states.</p>
+              <h5>Title & Transfer Documentation (Demo)</h5>
+              <p>Overview of documentation workflows including sample bank release letters, Form 29/30 sets, and RTO clearance steps.</p>
             </div>
           </div>
         </div>

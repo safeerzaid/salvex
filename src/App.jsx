@@ -171,6 +171,17 @@ export default function App() {
     showToast(`Bid confirmed: ₹${newBidAmount.toLocaleString('en-IN')}`);
   };
 
+  // Admin Overtime Extension (+120s)
+  const handleExtendLot = (lotId, extraSeconds = 120) => {
+    setLiveVehicles((prev) =>
+      prev.map((lot) =>
+        lot.id === lotId
+          ? { ...lot, endsInSeconds: Math.max(0, (lot.endsInSeconds || 0) + extraSeconds) }
+          : lot
+      )
+    );
+  };
+
   // Open Vehicle Details View
   const handleViewVehicleDetails = (vehicle) => {
     setActiveVehicle(vehicle);
@@ -449,6 +460,8 @@ export default function App() {
         {/* ROUTE 33: ADMIN COMMAND CENTER (/admin) */}
         {currentRoute === 'admin' && (
           <AdminPanel
+            liveLots={liveVehicles}
+            onExtendLot={handleExtendLot}
             onShowToast={showToast}
             onNavigateVehicleDetails={(v) => handleViewVehicleDetails(v)}
           />

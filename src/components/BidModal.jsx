@@ -1,13 +1,32 @@
-import React, { useState } from 'react';
-import { X, Gavel, ShieldCheck, AlertCircle, CheckCircle2, IndianRupee } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Gavel, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { BID_INCREMENT } from '../constants';
 
 export default function BidModal({ vehicle, isOpen, onClose, onConfirmBid }) {
   const currentBid = vehicle?.currentBid || vehicle?.startingBid || 0;
-  const minIncrement = 25000;
-  const [bidAmount, setBidAmount] = useState(currentBid + minIncrement);
+  const isEnded =
+    vehicle?.status === 'ended' ||
+    vehicle?.badge === 'ENDED' ||
+    (vehicle?.endsInSeconds !== undefined && vehicle.endsInSeconds <= 0);
+
+  const minValidBid = currentBid + BID_INCREMENT;
+  const [bidAmount, setBidAmount] = useState(minValidBid);
   const [agreed, setAgreed] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Synchronize default bid when vehicle changes or modal opens
+  useEffect(() => {
+    if (vehicle) {
+      const base = vehicle.currentBid || vehicle.startingBid || 0;
+      setBidAmount(base + BID_INCREMENT);
+      setErrorMsg('');
+      setAgreed(false);
+      setIsSuccess(false);
+      setIsSubmitting(false);
+    }
+  }, [vehicle?.id, vehicle?.currentBid, vehicle?.startingBid, isOpen]);
 
   if (!isOpen || !vehicle) return null;
 
@@ -20,14 +39,36 @@ export default function BidModal({ vehicle, isOpen, onClose, onConfirmBid }) {
   };
 
   const handleIncrement = (inc) => {
+    if (isEnded) return;
     setBidAmount(currentBid + inc);
     setErrorMsg('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (bidAmount <= currentBid) {
-      setErrorMsg(`Your bid must be greater than current bid ${formatCurrency(currentBid)}`);
+    if (isSubmitting) return;
+
+    if (isEnded) {
+      setErrorMsg('This auction has ended. Bidding is closed for this lot.');
+      return;
+    }
+
+    // Input validation: empty, NaN, zero, negative numbers, decimals
+    const num = Number(bidAmount);
+    if (bidAmount === '' || bidAmount === null || bidAmount === undefined || isNaN(num) || !isFinite(num)) {
+      setErrorMsg('Please enter a valid numeric bid amount.');
+      return;
+    }
+    if (num <= 0) {
+      setErrorMsg('Bid amount must be greater than zero.');
+      return;
+    }
+    if (!Number.isInteger(num)) {
+      setErrorMsg('Decimal bids are not accepted. Please enter a whole rupee amount.');
+      return;
+    }
+    if (num < currentBid + BID_INCREMENT) {
+      setErrorMsg(`Minimum bid is ${formatCurrency(currentBid + BID_INCREMENT)} (minimum valid increment is ${formatCurrency(BID_INCREMENT)}).`);
       return;
     }
     if (!agreed) {
@@ -35,10 +76,12 @@ export default function BidModal({ vehicle, isOpen, onClose, onConfirmBid }) {
       return;
     }
 
+    setIsSubmitting(true);
     setIsSuccess(true);
     setTimeout(() => {
-      onConfirmBid(vehicle.id, bidAmount);
+      onConfirmBid(vehicle.id, num);
       setIsSuccess(false);
+      setIsSubmitting(false);
       onClose();
     }, 1200);
   };
@@ -54,7 +97,7 @@ export default function BidModal({ vehicle, isOpen, onClose, onConfirmBid }) {
             </div>
             <div>
               <h3 className="modal-title">Place Live Bid</h3>
-              <p className="modal-subtitle">Lot #{vehicle.id.toUpperCase()} • {vehicle.make} {vehicle.model}</p>
+              <p className="modal-subtitle">Lot #{vehicle.id ? vehicle.id.toUpperCase() : 'DEMO'} • {vehicle.make} {vehicle.model}</p>
             </div>
           </div>
           <button type="button" className="modal-close-btn" onClick={onClose} aria-label="Close dialog">
@@ -62,12 +105,19 @@ export default function BidModal({ vehicle, isOpen, onClose, onConfirmBid }) {
           </button>
         </div>
 
+        {isEnded && (
+          <div className="modal-error-alert" style={{ margin: '16px 20px 0 20px' }}>
+            <AlertCircle size={16} />
+            <span>This auction lot has ended. Bidding is permanently closed.</span>
+          </div>
+        )}
+
         {isSuccess ? (
           <div className="bid-success-content">
             <CheckCircle2 size={52} className="text-success" />
             <h4 className="success-heading">Bid Placed Successfully!</h4>
             <p className="success-text">
-              Your bid of <strong>{formatCurrency(bidAmount)}</strong> has been registered on the live blockchain ledger.
+              Your bid of <strong>{formatCurrency(bidAmount)}</strong> was recorded (demo mode).
             </p>
           </div>
         ) : (
@@ -78,9 +128,9 @@ export default function BidModal({ vehicle, isOpen, onClose, onConfirmBid }) {
               <div className="summary-info">
                 <div className="summary-title">{vehicle.make} {vehicle.model}</div>
                 <div className="summary-tags">
-                  <span>{vehicle.yearMfg}</span> • <span>{vehicle.fuel}</span> • <span>{vehicle.kmDriven}</span>
+                  <span>{vehicle.yearMfg || vehicle.year || 'N/A'}</span> • <span>{vehicle.fuel || 'N/A'}</span> • <span>{vehicle.kmDriven || 'N/A'}</span>
                 </div>
-                <div className="summary-location">{vehicle.location}</div>
+                <div className="summary-location">{vehicle.location || 'Location Not available'}</div>
               </div>
             </div>
 
@@ -100,10 +150,11 @@ export default function BidModal({ vehicle, isOpen, onClose, onConfirmBid }) {
             <div className="quick-increments-section">
               <label className="increment-label">Quick Bid Increments (+ over current bid):</label>
               <div className="increment-buttons-row">
-                {[25000, 50000, 100000, 250000].map((inc) => (
+                {[BID_INCREMENT, 25000, 50000, 100000].map((inc) => (
                   <button
                     key={inc}
                     type="button"
+                    disabled={isEnded || isSubmitting}
                     className={`btn-increment-chip ${bidAmount === currentBid + inc ? 'chip-active' : ''}`}
                     onClick={() => handleIncrement(inc)}
                   >
@@ -123,18 +174,19 @@ export default function BidModal({ vehicle, isOpen, onClose, onConfirmBid }) {
                 <input
                   id="custom-bid-input"
                   type="number"
-                  min={currentBid + 1000}
-                  step={5000}
+                  min={currentBid + BID_INCREMENT}
+                  step={BID_INCREMENT}
                   value={bidAmount}
+                  disabled={isEnded || isSubmitting}
                   onChange={(e) => {
-                    setBidAmount(Number(e.target.value));
+                    setBidAmount(e.target.value === '' ? '' : Number(e.target.value));
                     setErrorMsg('');
                   }}
                   className="bid-number-input"
                 />
               </div>
               <span className="field-hint">
-                Minimum valid increment is ₹10,000 above the highest live bid.
+                Minimum valid increment is {formatCurrency(BID_INCREMENT)} above current bid. Minimum bid is {formatCurrency(currentBid + BID_INCREMENT)}.
               </span>
             </div>
 
@@ -150,22 +202,33 @@ export default function BidModal({ vehicle, isOpen, onClose, onConfirmBid }) {
               <input
                 type="checkbox"
                 checked={agreed}
+                disabled={isEnded || isSubmitting}
                 onChange={(e) => setAgreed(e.target.checked)}
               />
               <span>
-                I agree that this bid is legally binding under the Salvex Auction Buyer Agreement,
-                and sufficient deposit balance is maintained.
+                I understand this bid is a sample offer in this demo environment,
+                and test deposit balance is maintained.
               </span>
             </label>
 
             {/* Submit CTA */}
             <div className="modal-actions-row">
-              <button type="button" className="btn-modal-cancel" onClick={onClose}>
+              <button type="button" className="btn-modal-cancel" onClick={onClose} disabled={isSubmitting}>
                 Cancel
               </button>
-              <button type="submit" className="btn-primary flex-1 btn-large">
+              <button
+                type="submit"
+                className="btn-primary flex-1 btn-large"
+                disabled={isSubmitting || isEnded}
+              >
                 <Gavel size={18} />
-                <span>Submit Bid: {formatCurrency(bidAmount)}</span>
+                <span>
+                  {isSubmitting
+                    ? 'Processing Bid...'
+                    : isEnded
+                    ? 'Lot Ended'
+                    : `Submit Bid: ${formatCurrency(bidAmount || 0)}`}
+                </span>
               </button>
             </div>
           </form>

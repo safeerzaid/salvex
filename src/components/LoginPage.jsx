@@ -22,7 +22,7 @@ export default function LoginPage({
   onShowToast
 }) {
   const [authMode, setAuthMode] = useState('password'); // 'password' | 'otp'
-  const [identifier, setIdentifier] = useState('rahul.sharma@enterpriseholdings.in');
+  const [identifier, setIdentifier] = useState('demo.bidder@example.com');
   const [password, setPassword] = useState('••••••••••••');
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -77,11 +77,11 @@ export default function LoginPage({
           </div>
           <span className="login-badge-secure">
             <ShieldCheck size={13} />
-            RBI REGULATED ESCROW & STATUTORY COMPLIANCE
+            Secure settlement (demo)
           </span>
           <h1 className="login-title">Sign In to Salvex Auction</h1>
           <p className="login-subtitle">
-            Access your active bids, live auction terminal, escrow statements, and digital yard lifting passes.
+            Access your active bids, auction terminal, settlement statements, and digital yard lifting passes (demo).
           </p>
         </div>
 
@@ -103,7 +103,7 @@ export default function LoginPage({
         {statusState === 'suspended' && (
           <div className="login-alert-banner alert-error">
             <AlertCircle size={18} />
-            <span><strong>Account Suspended:</strong> This account has been paused due to unfulfilled auction settlement terms. Contact compliance@salvexauction.com.</span>
+            <span><strong>Account Suspended:</strong> This account has been paused due to unfulfilled auction settlement terms. Contact demo@example.com.</span>
           </div>
         )}
 
@@ -147,7 +147,7 @@ export default function LoginPage({
                 type={authMode === 'password' ? 'text' : 'tel'}
                 id="login-id"
                 required
-                placeholder={authMode === 'password' ? 'name@domain.com / +91...' : '+91 98765 43210'}
+                placeholder={authMode === 'password' ? 'demo@example.com / +91...' : '+91 00000 00000'}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
               />

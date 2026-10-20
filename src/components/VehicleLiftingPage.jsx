@@ -27,7 +27,7 @@ export default function VehicleLiftingPage({
   const [collectionConfirmed, setCollectionConfirmed] = useState(false);
 
   const stages = [
-    { num: 1, label: 'Payment Completed', desc: 'Escrow settlement confirmed' },
+    { num: 1, label: 'Payment Completed', desc: 'Secure settlement (demo) confirmed' },
     { num: 2, label: 'Documents Verified', desc: 'RTO Form 29/30 & NOC generated' },
     { num: 3, label: 'Vehicle Ready at Yard', desc: 'Vehicle prepped & gate pass active' },
     { num: 4, label: 'Vehicle Collected', desc: 'Physical release & gate pass clearance' }
@@ -120,7 +120,7 @@ export default function VehicleLiftingPage({
 
                     <div className="gp-info-box">
                       <span className="gi-lbl">PAYMENT STATUS</span>
-                      <span className="gi-val text-success">Fully Cleared (HDFC Escrow)</span>
+                      <span className="gi-val text-success">Fully Cleared (Secure settlement - demo)</span>
                     </div>
 
                     <div className="gp-info-box">
@@ -140,9 +140,9 @@ export default function VehicleLiftingPage({
                       <QrCode size={96} className="qr-icon-svg" />
                     </div>
                     <div className="qr-text">
-                      <h4>Cryptographic Yard Security QR</h4>
+                      <h4>Sample Yard Security QR (Demo)</h4>
                       <p>Scan by authorized stockyard gate inspector to authenticate release and log odometer upon exit.</p>
-                      <span className="sec-tag">SHA-256 Digital Verification Signature</span>
+                      <span className="sec-tag">Sample Digital Verification Format</span>
                     </div>
                   </div>
                 </div>

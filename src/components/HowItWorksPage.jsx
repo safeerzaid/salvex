@@ -73,9 +73,9 @@ export default function HowItWorksPage({ _onRegisterClick, _onExploreClick }) {
     },
     {
       num: '06',
-      title: 'Secure Escrow Settlement',
+      title: 'Secure Settlement (Demo)',
       icon: CreditCard,
-      summary: 'Remit the purchase consideration securely into the regulated Salvex Escrow Trust.',
+      summary: 'Remit the purchase consideration securely into the designated settlement account (demo).',
       details: [
         '10% Earnest Money Deposit (EMD) within 24 hours of close',
         'Remaining 90% balance settlement within 48 hours via RTGS/NEFT',
@@ -140,8 +140,8 @@ export default function HowItWorksPage({ _onRegisterClick, _onExploreClick }) {
           <div className="trust-grid">
             <div className="trust-col">
               <Lock size={28} className="text-auction-red" />
-              <h3>RBI Regulated Escrow</h3>
-              <p>Your funds remain held in an independent escrow trust until title documents and gate passes are validated.</p>
+              <h3>Secure settlement (demo)</h3>
+              <p>Simulated settlement process illustrating trust protection until title documents and gate passes are validated.</p>
             </div>
             <div className="trust-col">
               <Building size={28} className="text-auction-red" />

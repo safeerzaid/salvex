@@ -42,33 +42,33 @@ export default function ContactSection() {
     {
       icon: Phone,
       title: 'Phone Support',
-      value: '+91 (022) 6982 4500',
+      value: '+91 00000 00000',
       sub: 'Mon - Sat: 9:00 AM - 7:00 PM IST',
-      actionUrl: 'tel:+912269824500',
+      actionUrl: 'tel:+910000000000',
       actionLabel: 'Call Now'
     },
     {
       icon: MessageSquare,
       title: 'WhatsApp Desk',
-      value: '+91 98200 45678',
-      sub: 'Instant bidding alerts & catalogue updates',
-      actionUrl: 'https://wa.me/919820045678',
+      value: '+91 00000 00000',
+      sub: 'Sample bidding alerts & catalogue updates',
+      actionUrl: 'https://wa.me/910000000000',
       actionLabel: 'Chat on WhatsApp',
       isWhatsapp: true
     },
     {
       icon: Mail,
       title: 'Email Enquiries',
-      value: 'auctions@salvexauction.com',
-      sub: 'KYC & institution asset inquiries',
-      actionUrl: 'mailto:auctions@salvexauction.com',
+      value: 'demo@example.com',
+      sub: 'Demo & platform inquiries',
+      actionUrl: 'mailto:demo@example.com',
       actionLabel: 'Send Email'
     },
     {
       icon: MapPin,
       title: 'Office Address',
-      value: 'Salvex Commercial Towers, Level 8',
-      sub: 'BKC Avenue, Bandra Kurla Complex, Mumbai, MH 400051',
+      value: 'Demo Operations Desk (Sample)',
+      sub: 'Bandra Kurla Complex, Mumbai, MH (Demo Address)',
       actionUrl: '#',
       actionLabel: 'View on Maps'
     }
@@ -169,7 +169,7 @@ export default function ContactSection() {
                         id="contact-email"
                         type="email"
                         required
-                        placeholder="vikram@example.com"
+                        placeholder="demo@example.com"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="field-input"
@@ -184,7 +184,7 @@ export default function ContactSection() {
                         id="contact-mobile"
                         type="tel"
                         required
-                        placeholder="+91 98765 43210"
+                        placeholder="+91 00000 00000"
                         value={formData.mobile}
                         onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
                         className="field-input"
@@ -202,8 +202,8 @@ export default function ContactSection() {
                         <option value="Bidder Registration Support">Bidder Registration Support</option>
                         <option value="Vehicle Inspection Yard Visit">Vehicle Inspection Yard Visit</option>
                         <option value="Selling / Consignment Inquiry">Selling / Consignment Inquiry</option>
-                        <option value="Security Deposit & Escrow">Security Deposit & Escrow</option>
-                        <option value="Institutional Bank Portfolio">Institutional Bank Portfolio</option>
+                        <option value="Security Deposit & Settlement (Demo)">Security Deposit &amp; Settlement (Demo)</option>
+                        <option value="Sample Bank Portfolio">Sample Bank Portfolio</option>
                       </select>
                     </div>
                   </div>

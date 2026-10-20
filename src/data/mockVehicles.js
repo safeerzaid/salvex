@@ -158,7 +158,7 @@ export const liveVehiclesData = [
     bidCount: 29,
     endsInSeconds: 12480, // ~ 03:28:00
     image: '/images/mercedes-g63.jpg',
-    source: 'HDFC Bank Repossession Portfolio',
+    source: 'Sample Bank Repossession Portfolio',
     engine: '4.0L V8 Biturbo AMG (577 HP / 850 Nm)',
     exteriorColor: 'Obsidian Black Metallic with Night Package',
     interiorColor: 'Exclusive Nappa Leather Bengal Red / Black',
@@ -242,7 +242,7 @@ export const liveVehiclesData = [
     bidCount: 22,
     endsInSeconds: 22400, // ~ 06:13:20
     image: '/images/audi-rs6.jpg',
-    source: 'Kotak Mahindra Prime Asset Liquidation',
+    source: 'Institutional Asset Liquidation (Demo)',
     engine: '4.0L Twin-Turbo V8 with 48V MHEV (591 HP)',
     exteriorColor: 'Nardo Grey with Gloss Black Optics',
     interiorColor: 'Valcona Leather with Honeycomb Quilting',
@@ -270,7 +270,7 @@ export const liveVehiclesData = [
     bidCount: 26,
     endsInSeconds: 9800, // ~ 02:43:20
     image: '/images/mercedes-sclass.jpg',
-    source: 'Axis Bank Commercial Portfolio Recovery',
+    source: 'Sample Bank Commercial Portfolio Recovery',
     engine: '3.0L Turbocharged Inline-6 with EQ Boost (362 HP)',
     exteriorColor: 'Obsidian Black Metallic',
     interiorColor: 'Exclusive Sienna Brown Nappa Leather',
@@ -326,7 +326,7 @@ export const liveVehiclesData = [
     bidCount: 23,
     endsInSeconds: 18400,
     image: 'https://images.unsplash.com/photo-1541348263662-e0c8de4259ba?auto=format&fit=crop&w=800&q=80',
-    source: 'ICICI Bank Stressed Asset Division',
+    source: 'Sample Bank Stressed Asset Division',
     engine: '3.0L Turbocharged Inline-6 Diesel MHEV (345 HP)',
     exteriorColor: 'Santorini Black with Gloss Black Styling',
     interiorColor: 'Deep Garnet / Ebony Semi-Aniline Leather',
@@ -488,22 +488,22 @@ export const recentlyAddedVehiclesData = [
 ];
 
 export const platformStats = [
-  { value: '10K+', label: 'Vehicles Auctioned' },
-  { value: '25K+', label: 'Registered Bidders' },
-  { value: '500+', label: 'Trusted Partners' },
-  { value: '100%', label: 'Transparent Process' }
+  { value: '10K+ (sample)', label: 'Vehicles Auctioned' },
+  { value: '25K+ (sample)', label: 'Registered Bidders' },
+  { value: '500+ (sample)', label: 'Trusted Partners' },
+  { value: '100% (demo)', label: 'Transparent Process' }
 ];
 
 export const howItWorksSteps = [
   {
     number: '01',
     title: 'Register & Verify',
-    description: 'Create account and complete quick online KYC verification.'
+    description: 'Create account and complete quick online KYC verification (demo).'
   },
   {
     number: '02',
     title: 'Discover & Inspect',
-    description: 'Browse verified lots with comprehensive 150-point diagnostic reports.'
+    description: 'Browse lots with comprehensive sample multi-point diagnostic reports.'
   },
   {
     number: '03',
@@ -518,7 +518,7 @@ export const howItWorksSteps = [
   {
     number: '05',
     title: 'Secure Settlement',
-    description: 'Remit payments safely through RBI-authorized escrow banking channels.'
+    description: 'Remit payments safely through secure settlement (demo).'
   },
   {
     number: '06',
@@ -576,7 +576,7 @@ export const wonAuctionsData = [
     paymentDeadline: '02 Oct 2026 · 04:00 PM IST',
     hoursRemaining: 34,
     yardLocation: 'Salvex Logistics Yard, Plot 42-B, Electronic City, Bengaluru, KA 560100',
-    yardManager: 'Vikram Joshi (+91 98450 11223)',
+    yardManager: 'Yard Desk (+91 00000 00000)',
     liftingDeadline: '07 Oct 2026',
     liftingStatus: 'Payment Pending', // 'Payment Pending' | 'Payment Verified' | 'Gate Pass Issued' | 'Vehicle Ready' | 'Vehicle Collected'
     gatePassId: 'GP-BLR-2026-8842',
@@ -598,7 +598,7 @@ export const wonAuctionsData = [
     paymentDeadline: 'Settled on 26 Sep 2026',
     hoursRemaining: 0,
     yardLocation: 'Salvex Regional Yard, GST Road, Guindy, Chennai, TN 600032',
-    yardManager: 'K. Senthil (+91 97910 44556)',
+    yardManager: 'Yard Desk (+91 00000 00000)',
     liftingDeadline: '01 Oct 2026',
     liftingStatus: 'Vehicle Ready',
     gatePassId: 'GP-CHN-2026-3391',
@@ -675,38 +675,38 @@ export const adminMetricsData = {
 export const pendingKycReviewData = [
   {
     id: 'kyc-8821',
-    bidderName: 'Vikramaditya Rao',
-    bidderEmail: 'vikram.rao@enterpriseholdings.in',
-    mobile: '+91 98451 90211',
+    bidderName: 'Demo Bidder 1',
+    bidderEmail: 'demo.bidder1@example.com',
+    mobile: '+91 00000 00000',
     submittedAt: '2 hours ago',
     kycType: 'Corporate GSTIN & Board Resolution',
-    panNumber: 'AAACV9842F',
-    idProof: 'Aadhaar & Director Passport',
-    pccStatus: 'Valid PCC Verified',
+    panNumber: 'ABCDE1234F',
+    idProof: 'Sample ID (Demo)',
+    pccStatus: 'Verified (Demo)',
     status: 'Pending'
   },
   {
     id: 'kyc-8822',
-    bidderName: 'Meera Nambiar',
-    bidderEmail: 'meera.n@gmail.com',
-    mobile: '+91 97110 33819',
+    bidderName: 'Demo Bidder 2',
+    bidderEmail: 'demo.bidder2@example.com',
+    mobile: '+91 00000 00000',
     submittedAt: '4 hours ago',
     kycType: 'Individual Bidder',
-    panNumber: 'BTPPN4512K',
-    idProof: 'Voter ID (EPIC)',
-    pccStatus: 'PCC Submitted',
+    panNumber: 'ABCDE5678Q',
+    idProof: 'Sample ID (Demo)',
+    pccStatus: 'Submitted (Demo)',
     status: 'Pending'
   },
   {
     id: 'kyc-8823',
-    bidderName: 'Kailash Autotraders LLP',
-    bidderEmail: 'compliance@kailashauto.com',
-    mobile: '+91 94250 88102',
+    bidderName: 'Sample Autotraders (Demo)',
+    bidderEmail: 'demo.bidder3@example.com',
+    mobile: '+91 00000 00000',
     submittedAt: '1 day ago',
     kycType: 'Automotive Dealer Trade License',
-    panNumber: 'AABFK7719L',
-    idProof: 'GST Certificate & Trade License',
-    pccStatus: 'Exempt (Verified Dealer)',
+    panNumber: 'ABCDE9912M',
+    idProof: 'Sample License (Demo)',
+    pccStatus: 'Verified (Demo)',
     status: 'Pending'
   }
 ];
@@ -726,7 +726,7 @@ export const notificationsData = [
     id: 'notif-02',
     type: 'won',
     title: 'Auction Won: Land Rover Defender 110',
-    message: 'Congratulations! Your winning bid of ₹1,62,00,000 has been confirmed. Escrow payment window is open.',
+    message: 'Congratulations! Your winning bid of ₹1,62,00,000 has been confirmed. Settlement payment window (demo) is open.',
     time: '34 mins ago',
     read: false,
     link: 'payment'
@@ -735,7 +735,7 @@ export const notificationsData = [
     id: 'notif-03',
     type: 'kyc',
     title: 'KYC Verification Approved',
-    message: 'Your Tier-2 Bidder identity verification and PCC have been verified by Salvex Compliance.',
+    message: 'Your Tier-2 Bidder identity verification and profile have been processed (demo mode).',
     time: '1 day ago',
     read: true,
     link: 'dashboard'
@@ -832,8 +832,8 @@ export const legalPoliciesData = {
         content: 'We collect personal identification data (Full legal name, phone number, email address, physical address, PAN details, government ID records, and vehicle registration certificates) strictly for identity authentication, anti-fraud compliance, and statutory RTO transfer protocols.'
       },
       {
-        heading: '2. Financial & Escrow Data Security',
-        content: 'All payment settlements are executed via Reserve Bank of India regulated banking conduits and specialized escrow trusts. Salvex Auction never stores sensitive debit card PINs or banking credentials on public servers.'
+        heading: '2. Financial & Settlement Data Security',
+        content: 'All payment settlements are simulated via secure settlement (demo) architecture. Salvex Auction demo does not process or store sensitive payment credentials on public servers.'
       }
     ]
   },
@@ -847,7 +847,7 @@ export const legalPoliciesData = {
       },
       {
         heading: '2. Default and EMD Forfeiture',
-        content: 'In the event a winning bidder fails to remit the full purchase consideration within the mandatory 48-hour escrow settlement window, the 10% Earnest Money Deposit (EMD) is forfeited to compensate the asset owner and platform liquidation costs.'
+        content: 'In the event a winning bidder fails to remit the full purchase consideration within the designated 48-hour settlement window (demo), the 10% Earnest Money Deposit (EMD) is forfeited to compensate the asset owner and platform liquidation costs.'
       }
     ]
   },

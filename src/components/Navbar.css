@@ -42,6 +42,33 @@
 }
 
 /* ==========================================================================
+   SLIM DEMO DISCLAIMER STRIP
+   ========================================================================== */
+.navbar-demo-disclaimer-strip {
+  background-color: #0A0F1D;
+  color: #CBD5E1;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  line-height: 1.3;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.demo-disclaimer-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.navbar-demo-disclaimer-strip strong {
+  color: #F59E0B;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ==========================================================================
    TIER 0: ROYAL BLUE ANNOUNCEMENT BAR (#075BFF)
    ========================================================================== */
 .navbar-announcement-bar {

@@ -3,8 +3,6 @@ import { X, PlusCircle, CheckCircle2, ArrowRight, Upload, Building2 } from 'luci
 import SalvexLogo from './SalvexLogo';
 
 export default function ListVehicleModal({ isOpen, onClose }) {
-  if (!isOpen) return null;
-
   const [sellerType, setSellerType] = useState('bank');
   const [formData, setFormData] = useState({
     sellerName: '',
@@ -22,6 +20,8 @@ export default function ListVehicleModal({ isOpen, onClose }) {
     e.preventDefault();
     setIsSuccess(true);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
@@ -98,7 +98,7 @@ export default function ListVehicleModal({ isOpen, onClose }) {
                   id="seller-name"
                   type="text"
                   required
-                  placeholder="e.g. HDFC Asset Recovery / Zenith Motors"
+                  placeholder="e.g. Sample Asset Recovery / Sample Motors"
                   className="field-input"
                   value={formData.sellerName}
                   onChange={(e) => setFormData({ ...formData, sellerName: e.target.value })}
@@ -111,7 +111,7 @@ export default function ListVehicleModal({ isOpen, onClose }) {
                   id="seller-phone"
                   type="tel"
                   required
-                  placeholder="+91 98200 12345"
+                  placeholder="+91 00000 00000"
                   className="field-input"
                   value={formData.contactMobile}
                   onChange={(e) => setFormData({ ...formData, contactMobile: e.target.value })}
