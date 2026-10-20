@@ -31,6 +31,40 @@ export default function Navbar({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('INR ₹');
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
+  const [auctionsDropdownOpen, setAuctionsDropdownOpen] = useState(false);
+  const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const [mobileAuctionsOpen, setMobileAuctionsOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('#nav-wrap-auctions')) {
+        setAuctionsDropdownOpen(false);
+      }
+      if (!e.target.closest('#nav-wrap-services')) {
+        setServicesDropdownOpen(false);
+      }
+      if (!e.target.closest('.navbar-currency-wrap')) {
+        setCurrencyDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setAuctionsDropdownOpen(false);
+        setServicesDropdownOpen(false);
+        setCurrencyDropdownOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const currencies = [
     { code: 'INR', label: 'INR ₹' },
@@ -76,14 +110,16 @@ export default function Navbar({
     { id: 'contact', label: 'Contact' }
   ];
 
-  const handleLinkClick = (id) => {
+  const handleLinkClick = (idOrPath) => {
     setIsScrolled(false);
     setIsVisible(true);
     setMobileMenuOpen(false);
+    setAuctionsDropdownOpen(false);
+    setServicesDropdownOpen(false);
     if (onNavigate) {
-      onNavigate(id);
+      onNavigate(idOrPath);
     } else {
-      const el = document.getElementById(id);
+      const el = document.getElementById(idOrPath);
       if (el) el.scrollIntoView({ behavior: 'smooth' });
     }
   };
@@ -311,24 +347,229 @@ export default function Navbar({
         <div className="navbar-links-row">
           <div className="salvex-nav-container links-row-container">
             <nav className="navbar-links-center" aria-label="Main Navigation">
-              {navItems.map((item) => {
-                const isActive = activeSection === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => handleLinkClick(item.id)}
-                    className={`nav-link-btn ${isActive ? 'nav-link-active' : ''}`}
-                    id={`nav-link-${item.id}`}
-                  >
-                    <span>{item.label}</span>
-                    {item.isLive && (
-                      <span className="nav-live-capsule">LIVE</span>
-                    )}
-                    {isActive && <span className="nav-bottom-indicator" />}
-                  </button>
-                );
-              })}
+              {/* Home */}
+              <button
+                type="button"
+                onClick={() => handleLinkClick('home')}
+                className={`nav-link-btn ${activeSection === 'home' ? 'nav-link-active' : ''}`}
+                id="nav-link-home"
+              >
+                <span>Home</span>
+                {activeSection === 'home' && <span className="nav-bottom-indicator" />}
+              </button>
+
+              {/* Auctions Dropdown */}
+              <div
+                className="navbar-dropdown-wrap"
+                id="nav-wrap-auctions"
+                onMouseEnter={() => setAuctionsDropdownOpen(true)}
+                onMouseLeave={() => setAuctionsDropdownOpen(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => setAuctionsDropdownOpen((prev) => !prev)}
+                  className={`nav-link-btn ${activeSection === 'auctions' ? 'nav-link-active' : ''}`}
+                  id="nav-link-auctions"
+                  aria-expanded={auctionsDropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <span>Auctions</span>
+                  <ChevronDown size={14} className={`dropdown-chevron ${auctionsDropdownOpen ? 'open' : ''}`} />
+                  {activeSection === 'auctions' && <span className="nav-bottom-indicator" />}
+                </button>
+
+                {auctionsDropdownOpen && (
+                  <div className="navbar-dropdown-menu" role="menu">
+                    {/* Live Auctions Group */}
+                    <div className="dropdown-section">
+                      <button
+                        type="button"
+                        className="dropdown-item dropdown-section-title"
+                        onClick={() => handleLinkClick('/auctions/live')}
+                        id="nav-item-live-auctions"
+                      >
+                        <span>Live Auctions</span>
+                        <span className="nav-live-capsule">LIVE</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item dropdown-sub-item"
+                        onClick={() => handleLinkClick('/auctions/live?category=insurance')}
+                        id="nav-subitem-live-insurance"
+                      >
+                        Insurance Auctions
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item dropdown-sub-item"
+                        onClick={() => handleLinkClick('/auctions/live?category=bank-nbfc')}
+                        id="nav-subitem-live-bank"
+                      >
+                        Bank / NBFC Auctions
+                      </button>
+                    </div>
+
+                    <div className="dropdown-divider" />
+
+                    {/* Upcoming Auctions Group */}
+                    <div className="dropdown-section">
+                      <button
+                        type="button"
+                        className="dropdown-item dropdown-section-title"
+                        onClick={() => handleLinkClick('/auctions/upcoming')}
+                        id="nav-item-upcoming-auctions"
+                      >
+                        <span>Upcoming Auctions</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item dropdown-sub-item"
+                        onClick={() => handleLinkClick('/auctions/upcoming?category=insurance')}
+                        id="nav-subitem-upcoming-insurance"
+                      >
+                        Insurance Auctions
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item dropdown-sub-item"
+                        onClick={() => handleLinkClick('/auctions/upcoming?category=bank-nbfc')}
+                        id="nav-subitem-upcoming-bank"
+                      >
+                        Bank / NBFC Auctions
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item dropdown-sub-item"
+                        onClick={() => handleLinkClick('/auctions/upcoming?category=used-vehicle')}
+                        id="nav-subitem-upcoming-used"
+                      >
+                        Used Vehicle Auctions
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item dropdown-sub-item"
+                        onClick={() => handleLinkClick('/auctions/upcoming?category=used-spare-parts')}
+                        id="nav-subitem-upcoming-parts"
+                      >
+                        Used Spare Parts
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Ready to Lift */}
+              <button
+                type="button"
+                onClick={() => handleLinkClick('ready-to-lift')}
+                className={`nav-link-btn ${activeSection === 'ready-to-lift' ? 'nav-link-active' : ''}`}
+                id="nav-link-ready-to-lift"
+              >
+                <span>Ready to Lift</span>
+                {activeSection === 'ready-to-lift' && <span className="nav-bottom-indicator" />}
+              </button>
+
+              {/* Our Services Dropdown */}
+              <div
+                className="navbar-dropdown-wrap"
+                id="nav-wrap-services"
+                onMouseEnter={() => setServicesDropdownOpen(true)}
+                onMouseLeave={() => setServicesDropdownOpen(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => setServicesDropdownOpen((prev) => !prev)}
+                  className={`nav-link-btn ${activeSection === 'services' ? 'nav-link-active' : ''}`}
+                  id="nav-link-services"
+                  aria-expanded={servicesDropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <span>Our Services</span>
+                  <ChevronDown size={14} className={`dropdown-chevron ${servicesDropdownOpen ? 'open' : ''}`} />
+                  {activeSection === 'services' && <span className="nav-bottom-indicator" />}
+                </button>
+
+                {servicesDropdownOpen && (
+                  <div className="navbar-dropdown-menu" role="menu">
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/services/insurance')}
+                      id="nav-service-insurance"
+                    >
+                      Vehicle Insurance
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/services/recovery')}
+                      id="nav-service-recovery"
+                    >
+                      Recovery Vehicle Booking
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/sell')}
+                      id="nav-service-sell"
+                    >
+                      Sell Your Vehicle
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => handleLinkClick('/services/documentation')}
+                      id="nav-service-documentation"
+                    >
+                      Vehicle Documentation Assistance
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Vehicles */}
+              <button
+                type="button"
+                onClick={() => handleLinkClick('vehicles')}
+                className={`nav-link-btn ${activeSection === 'vehicles' ? 'nav-link-active' : ''}`}
+                id="nav-link-vehicles"
+              >
+                <span>Vehicles</span>
+                {activeSection === 'vehicles' && <span className="nav-bottom-indicator" />}
+              </button>
+
+              {/* How It Works */}
+              <button
+                type="button"
+                onClick={() => handleLinkClick('how-it-works')}
+                className={`nav-link-btn ${activeSection === 'how-it-works' ? 'nav-link-active' : ''}`}
+                id="nav-link-how-it-works"
+              >
+                <span>How It Works</span>
+                {activeSection === 'how-it-works' && <span className="nav-bottom-indicator" />}
+              </button>
+
+              {/* About */}
+              <button
+                type="button"
+                onClick={() => handleLinkClick('about')}
+                className={`nav-link-btn ${activeSection === 'about' ? 'nav-link-active' : ''}`}
+                id="nav-link-about"
+              >
+                <span>About</span>
+                {activeSection === 'about' && <span className="nav-bottom-indicator" />}
+              </button>
+
+              {/* Contact */}
+              <button
+                type="button"
+                onClick={() => handleLinkClick('contact')}
+                className={`nav-link-btn ${activeSection === 'contact' ? 'nav-link-active' : ''}`}
+                id="nav-link-contact"
+              >
+                <span>Contact</span>
+                {activeSection === 'contact' && <span className="nav-bottom-indicator" />}
+              </button>
             </nav>
           </div>
         </div>
@@ -360,19 +601,220 @@ export default function Navbar({
 
         <div className="mobile-drawer-body">
           <nav className="mobile-nav-list">
-            {navItems.map((item) => (
+            {/* Home */}
+            <button
+              type="button"
+              onClick={() => handleLinkClick('home')}
+              className={`mobile-nav-item ${activeSection === 'home' ? 'mobile-nav-active' : ''}`}
+              id="mobile-nav-link-home"
+            >
+              <span className="mobile-nav-label-wrap">
+                <span>Home</span>
+              </span>
+              <ArrowRight size={14} className="mobile-nav-chevron" />
+            </button>
+
+            {/* Auctions Accordion */}
+            <div className="mobile-accordion-group">
               <button
-                key={item.id}
-                onClick={() => handleLinkClick(item.id)}
-                className={`mobile-nav-item ${activeSection === item.id ? 'mobile-nav-active' : ''}`}
+                type="button"
+                className={`mobile-nav-item ${activeSection === 'auctions' ? 'mobile-nav-active' : ''}`}
+                onClick={() => setMobileAuctionsOpen((prev) => !prev)}
+                id="mobile-nav-link-auctions"
               >
                 <span className="mobile-nav-label-wrap">
-                  <span>{item.label}</span>
-                  {item.isLive && <span className="nav-live-capsule">LIVE</span>}
+                  <span>Auctions</span>
                 </span>
-                <ArrowRight size={14} className="mobile-nav-chevron" />
+                <ChevronDown size={14} className={`dropdown-chevron ${mobileAuctionsOpen ? 'open' : ''}`} />
               </button>
-            ))}
+              {mobileAuctionsOpen && (
+                <div className="mobile-sub-menu">
+                  <div className="mobile-sub-group-title">Live Auctions</div>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/auctions/live')}
+                    id="mobile-nav-item-live-auctions"
+                  >
+                    All Live Auctions
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/auctions/live?category=insurance')}
+                    id="mobile-nav-subitem-live-insurance"
+                  >
+                    Insurance Auctions
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/auctions/live?category=bank-nbfc')}
+                    id="mobile-nav-subitem-live-bank"
+                  >
+                    Bank / NBFC Auctions
+                  </button>
+
+                  <div className="mobile-sub-group-title" style={{ marginTop: '8px' }}>Upcoming Auctions</div>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/auctions/upcoming')}
+                    id="mobile-nav-item-upcoming-auctions"
+                  >
+                    All Upcoming Auctions
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/auctions/upcoming?category=insurance')}
+                    id="mobile-nav-subitem-upcoming-insurance"
+                  >
+                    Insurance Auctions
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/auctions/upcoming?category=bank-nbfc')}
+                    id="mobile-nav-subitem-upcoming-bank"
+                  >
+                    Bank / NBFC Auctions
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/auctions/upcoming?category=used-vehicle')}
+                    id="mobile-nav-subitem-upcoming-used"
+                  >
+                    Used Vehicle Auctions
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/auctions/upcoming?category=used-spare-parts')}
+                    id="mobile-nav-subitem-upcoming-parts"
+                  >
+                    Used Spare Parts
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Ready to Lift */}
+            <button
+              type="button"
+              onClick={() => handleLinkClick('ready-to-lift')}
+              className={`mobile-nav-item ${activeSection === 'ready-to-lift' ? 'mobile-nav-active' : ''}`}
+              id="mobile-nav-link-ready-to-lift"
+            >
+              <span className="mobile-nav-label-wrap">
+                <span>Ready to Lift</span>
+              </span>
+              <ArrowRight size={14} className="mobile-nav-chevron" />
+            </button>
+
+            {/* Our Services Accordion */}
+            <div className="mobile-accordion-group">
+              <button
+                type="button"
+                className={`mobile-nav-item ${activeSection === 'services' ? 'mobile-nav-active' : ''}`}
+                onClick={() => setMobileServicesOpen((prev) => !prev)}
+                id="mobile-nav-link-services"
+              >
+                <span className="mobile-nav-label-wrap">
+                  <span>Our Services</span>
+                </span>
+                <ChevronDown size={14} className={`dropdown-chevron ${mobileServicesOpen ? 'open' : ''}`} />
+              </button>
+              {mobileServicesOpen && (
+                <div className="mobile-sub-menu">
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/services/insurance')}
+                    id="mobile-nav-service-insurance"
+                  >
+                    Vehicle Insurance
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/services/recovery')}
+                    id="mobile-nav-service-recovery"
+                  >
+                    Recovery Vehicle Booking
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/sell')}
+                    id="mobile-nav-service-sell"
+                  >
+                    Sell Your Vehicle
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-sub-item"
+                    onClick={() => handleLinkClick('/services/documentation')}
+                    id="mobile-nav-service-documentation"
+                  >
+                    Vehicle Documentation Assistance
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Vehicles */}
+            <button
+              type="button"
+              onClick={() => handleLinkClick('vehicles')}
+              className={`mobile-nav-item ${activeSection === 'vehicles' ? 'mobile-nav-active' : ''}`}
+              id="mobile-nav-link-vehicles"
+            >
+              <span className="mobile-nav-label-wrap">
+                <span>Vehicles</span>
+              </span>
+              <ArrowRight size={14} className="mobile-nav-chevron" />
+            </button>
+
+            {/* How It Works */}
+            <button
+              type="button"
+              onClick={() => handleLinkClick('how-it-works')}
+              className={`mobile-nav-item ${activeSection === 'how-it-works' ? 'mobile-nav-active' : ''}`}
+              id="mobile-nav-link-how-it-works"
+            >
+              <span className="mobile-nav-label-wrap">
+                <span>How It Works</span>
+              </span>
+              <ArrowRight size={14} className="mobile-nav-chevron" />
+            </button>
+
+            {/* About */}
+            <button
+              type="button"
+              onClick={() => handleLinkClick('about')}
+              className={`mobile-nav-item ${activeSection === 'about' ? 'mobile-nav-active' : ''}`}
+              id="mobile-nav-link-about"
+            >
+              <span className="mobile-nav-label-wrap">
+                <span>About</span>
+              </span>
+              <ArrowRight size={14} className="mobile-nav-chevron" />
+            </button>
+
+            {/* Contact */}
+            <button
+              type="button"
+              onClick={() => handleLinkClick('contact')}
+              className={`mobile-nav-item ${activeSection === 'contact' ? 'mobile-nav-active' : ''}`}
+              id="mobile-nav-link-contact"
+            >
+              <span className="mobile-nav-label-wrap">
+                <span>Contact</span>
+              </span>
+              <ArrowRight size={14} className="mobile-nav-chevron" />
+            </button>
           </nav>
 
           <div className="mobile-drawer-divider" />
@@ -419,3 +861,4 @@ export default function Navbar({
     </>
   );
 }
+

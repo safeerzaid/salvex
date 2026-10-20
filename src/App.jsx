@@ -24,6 +24,10 @@ import AboutPage from './components/AboutPage';
 import ContactPage from './components/ContactPage';
 import FaqPage from './components/FaqPage';
 import LegalPage from './components/LegalPage';
+import ReadyToLiftPage from './components/ReadyToLiftPage';
+import InsuranceServicePage from './components/services/InsuranceServicePage';
+import RecoveryServicePage from './components/services/RecoveryServicePage';
+import DocumentationServicePage from './components/services/DocumentationServicePage';
 
 // Authentication & Seller Onboarding Pages
 import LoginPage from './components/LoginPage';
@@ -68,6 +72,10 @@ export const ROUTE_MAP = {
   'live-auctions': '/auctions/live',
   'upcoming-auctions': '/auctions/upcoming',
   'recently-added': '/vehicles/recent',
+  'ready-to-lift': '/ready-to-lift',
+  'service-insurance': '/services/insurance',
+  'service-recovery': '/services/recovery',
+  'service-documentation': '/services/documentation',
   'how-it-works': '/how-it-works',
   'bidding-rules': '/bidding-rules',
   about: '/about',
@@ -108,8 +116,10 @@ export default function App() {
   const getActiveSection = () => {
     const path = location.pathname;
     if (path === '/') return 'home';
-    if (path.startsWith('/auctions/live')) return 'live-auctions';
-    if (path.startsWith('/auctions/upcoming')) return 'upcoming-auctions';
+    if (path.startsWith('/auctions')) return 'auctions';
+    if (path.startsWith('/ready-to-lift')) return 'ready-to-lift';
+    if (path.startsWith('/services')) return 'services';
+    if (path === '/sell') return 'services';
     if (path === '/vehicles/recent') return 'vehicles';
     if (path.startsWith('/vehicles')) return 'vehicles';
     if (path.startsWith('/how-it-works')) return 'how-it-works';
@@ -156,6 +166,11 @@ export default function App() {
     }
     if (route === 'lifting' && params?.lotId) {
       navigate(`/lifting/${params.lotId}`);
+      return;
+    }
+
+    if (route && (route.startsWith('/') || route.includes('?'))) {
+      navigate(route);
       return;
     }
 
@@ -466,6 +481,14 @@ export default function App() {
               />
             }
           />
+
+          {/* ROUTE 19B: READY TO LIFT (/ready-to-lift) */}
+          <Route path="/ready-to-lift" element={<ReadyToLiftPage />} />
+
+          {/* ROUTE 19C: OUR SERVICES */}
+          <Route path="/services/insurance" element={<InsuranceServicePage />} />
+          <Route path="/services/recovery" element={<RecoveryServicePage />} />
+          <Route path="/services/documentation" element={<DocumentationServicePage />} />
 
           {/* ROUTE 20: BIDDER DASHBOARD (/dashboard) - Guarded */}
           <Route
