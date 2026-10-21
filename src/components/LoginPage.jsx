@@ -29,35 +29,79 @@ export default function LoginPage({
   const [otpSent, setOtpSent] = useState(false);
   const [statusState, setStatusState] = useState(null); // null | 'loading' | 'success' | 'invalid' | 'pending' | 'suspended'
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setStatusState('loading');
 
-    setTimeout(() => {
-      // Check for specific test scenarios
-      if (identifier.toLowerCase().includes('suspended')) {
-        setStatusState('suspended');
-        return;
-      }
-      if (identifier.toLowerCase().includes('pending')) {
-        setStatusState('pending');
-        return;
-      }
-      if (!identifier || (!password && authMode === 'password')) {
+    // If password mode, attempt real backend authentication
+    if (authMode === 'password') {
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            identifier: identifier.trim(),
+            password: password
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setStatusState('success');
+          const userRole = data.user?.role || 'bidder';
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('salvex_demo_auth', JSON.stringify({
+              isAuthenticated: true,
+              role: userRole,
+              user: data.user
+            }));
+          }
+          if (onShowToast) onShowToast(`Welcome back, ${data.user?.name || 'Bidder'}!`);
+          setTimeout(() => {
+            if (onLoginSuccess) onLoginSuccess(userRole);
+          }, 600);
+          return;
+        }
+
+        // Handle specific error codes
+        if (response.status === 403 && data.detail?.includes('verify your email')) {
+          setStatusState('pending');
+          return;
+        } else if (data.detail?.includes('suspended')) {
+          setStatusState('suspended');
+          return;
+        } else {
+          setStatusState('invalid');
+          return;
+        }
+      } catch (err) {
+        // Fallback for offline demo scenarios
+        if (identifier.toLowerCase().includes('suspended')) {
+          setStatusState('suspended');
+          return;
+        }
+        if (identifier.toLowerCase().includes('pending')) {
+          setStatusState('pending');
+          return;
+        }
         setStatusState('invalid');
         return;
       }
+    }
 
+    // Mobile OTP simulation/preview
+    setTimeout(() => {
       setStatusState('success');
-      // TEMPORARY: fake auth for prototype, replace with real backend auth
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('salvex_demo_auth', JSON.stringify({ isAuthenticated: true, role: 'bidder' }));
       }
-      if (onShowToast) onShowToast('Login authenticated successfully. Welcome to Salvex Auction.');
+      if (onShowToast) onShowToast('Login authenticated via Mobile OTP.');
       setTimeout(() => {
         if (onLoginSuccess) onLoginSuccess('bidder');
-      }, 700);
-    }, 750);
+      }, 600);
+    }, 700);
   };
 
   const handleQuickPersona = (role) => {
