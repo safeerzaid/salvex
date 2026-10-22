@@ -3,8 +3,16 @@ import logging
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import text
 from app.core.config import settings
+from app.core.db_url import is_local_host, ssl_mode
 
 logger = logging.getLogger("salvex.db")
+
+if not is_local_host(settings.DATABASE_URL) and ssl_mode(settings.DATABASE_URL) in (None, "disable", "allow", "prefer"):
+    # Never logs the URL itself
+    logger.warning(
+        "DATABASE_URL points to a remote host without a required SSL mode; "
+        "traffic may be unencrypted. Add ?sslmode=require (or verify-full) to the URL."
+    )
 
 # Create Async Engine targeting PostgreSQL
 engine = create_async_engine(

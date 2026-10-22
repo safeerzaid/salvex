@@ -1,6 +1,7 @@
 from typing import List
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from app.core.db_url import to_async_url, to_sync_url
 
 
 class Settings(BaseSettings):
@@ -11,7 +12,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="ignore"
+        extra="ignore",
+        # Validation errors must never echo the value (DATABASE_URL contains a password)
+        hide_input_in_errors=True,
     )
 
     APP_ENV: str = Field(default="development", description="Environment: development, staging, production")
@@ -55,10 +58,17 @@ class Settings(BaseSettings):
             )
         # Normalize to asyncpg for async SQLAlchemy engine if not specified
         if v.startswith("postgresql://"):
-            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
-        if v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql+asyncpg://", 1)
-        return v
+            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgres://"):
+            v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+        # asyncpg spells the SSL option ?ssl=..., while the company/provider URL (and
+        # psycopg2) use ?sslmode=.... Translate it; never add or weaken SSL.
+        return to_async_url(v)
+
+    @property
+    def sync_database_url(self) -> str:
+        """DATABASE_URL in the form Alembic's psycopg2 driver understands."""
+        return to_sync_url(self.DATABASE_URL)
 
     @property
     def cors_origins(self) -> List[str]:

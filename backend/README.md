@@ -88,6 +88,18 @@ Execute pytest suite:
 pytest
 ```
 
+**Tests only ever use a separate LOCAL test database** (never the development or company database).
+`pytest` refuses to start if the test database is missing, remote, or not named with "test".
+
+- By default it uses database `salvex_test_db` on the same local PostgreSQL server and login as the
+  local URL in `backend/.env` (`LOCAL_DATABASE_URL` if `DATABASE_URL` is remote).
+- To choose another local database, set `TEST_DATABASE_URL` (the database name must contain "test").
+- The test database must exist and have the migrations applied before the database tests can run.
+
+**SSL for hosted databases:** add `?sslmode=require` (or `verify-full`) to the end of `DATABASE_URL`.
+The app and Alembic each get the spelling their driver needs automatically. A remote URL without a
+required SSL mode logs a warning at startup.
+
 ---
 
 ## 7. Start the FastAPI Development Server

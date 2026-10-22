@@ -2,7 +2,7 @@ import pytest
 import uuid
 from decimal import Decimal
 from datetime import datetime, timezone
-from dotenv import dotenv_values
+from safe_db import safe_test_url
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy import select
 
@@ -18,18 +18,7 @@ async def pg_test_session():
     Always rolls back upon fixture teardown to guarantee that no test records persist,
     ensuring zero pollution and no destructive database modifications.
     """
-    env_vars = dotenv_values(".env")
-    raw_url = env_vars.get("DATABASE_URL")
-    if not raw_url:
-        pytest.skip("DATABASE_URL not configured in backend/.env, skipping live PostgreSQL integration tests")
-    
-    # Normalize to asyncpg
-    if raw_url.startswith("postgresql://"):
-        async_url = raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    else:
-        async_url = raw_url
-
-    engine = create_async_engine(async_url, echo=False)
+    engine = create_async_engine(safe_test_url(), echo=False)  # local test database only
     session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_factory() as session:

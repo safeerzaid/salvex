@@ -20,10 +20,8 @@ target_metadata = Base.metadata
 
 def get_sync_db_url() -> str:
     """Derive synchronous PostgreSQL connection URL for Alembic migrations."""
-    url = settings.DATABASE_URL
-    if url.startswith("postgresql+asyncpg://"):
-        return url.replace("postgresql+asyncpg://", "postgresql://", 1)
-    return url
+    # Also translates the SSL option (?ssl= -> ?sslmode=) for the psycopg2 driver
+    return settings.sync_database_url
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""

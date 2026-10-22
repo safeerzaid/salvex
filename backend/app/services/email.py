@@ -21,14 +21,24 @@ class BaseEmailService(ABC):
 
 class ConsoleEmailService(BaseEmailService):
     """
-    Local development transport: simulates sending emails without printing OTP secrets to production logs.
+    Local transport that doesn't send real email.
+    The code is written to the log only when APP_ENV is exactly "development",
+    so the verification and reset flows can be completed locally.
+    In any other environment the code is never logged.
     """
+    @staticmethod
+    def _log(kind: str, to_email: str, otp: str) -> None:
+        if settings.APP_ENV == "development":
+            logger.info(f"[DEV_EMAIL] {kind} code for {to_email}: {otp}")
+        else:
+            logger.info(f"[DEV_EMAIL] {kind} code generated for {to_email} (not logged outside development)")
+
     async def send_verification_otp(self, to_email: str, otp: str, user_name: str) -> Tuple[bool, str]:
-        logger.info(f"[DEV_EMAIL] Verification OTP dispatched to {to_email}")
+        self._log("Verification", to_email, otp)
         return True, "Email dispatched via local mock"
 
     async def send_password_reset_otp(self, to_email: str, otp: str, user_name: str) -> Tuple[bool, str]:
-        logger.info(f"[DEV_EMAIL] Password reset OTP dispatched to {to_email}")
+        self._log("Password reset", to_email, otp)
         return True, "Email dispatched via local mock"
 
 

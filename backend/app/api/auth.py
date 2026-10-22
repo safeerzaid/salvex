@@ -67,13 +67,15 @@ async def verify_email(
     auth_service = AuthService(db, email_service)
 
     success, message = await auth_service.verify_email_otp(data.email, data.otp)
+    # Commit even on failure so attempt counts and invalidated codes are saved.
+    # Without this, the error response rolls back and the attempt limit never applies.
+    await db.commit()
     if not success:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=message
         )
 
-    await db.commit()
     return GenericMessageResponse(message=message)
 
 
@@ -199,11 +201,12 @@ async def reset_password(
         otp=data.otp,
         new_password=data.new_password
     )
+    # Commit even on failure so attempt counts and invalidated codes are saved.
+    await db.commit()
     if not success:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=message
         )
 
-    await db.commit()
     return GenericMessageResponse(message=message)

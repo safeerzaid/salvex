@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Optional, Tuple
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +13,12 @@ from app.core.security import (
     create_access_token
 )
 from app.services.email import BaseEmailService
+
+
+@lru_cache(maxsize=1)
+def _dummy_password_hash() -> str:
+    """Bcrypt hash of a random value, used to equalize login timing."""
+    return hash_password(generate_secure_otp(16))
 
 
 class AuthService:
@@ -204,8 +211,12 @@ class AuthService:
         res = await self.db.execute(stmt)
         user = res.scalar_one_or_none()
 
-        # Constant-time password check or dummy check to mitigate timing attacks
-        if not user or not verify_password(password, user.password_hash):
+        # Run a bcrypt check even for unknown emails so response time
+        # doesn't reveal which emails are registered.
+        if not user:
+            verify_password(password, _dummy_password_hash())
+            return None, None, "Invalid email or password. Please check your credentials."
+        if not verify_password(password, user.password_hash):
             return None, None, "Invalid email or password. Please check your credentials."
 
         if not user.is_active:

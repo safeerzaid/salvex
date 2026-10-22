@@ -3,7 +3,7 @@ import uuid
 from typing import Tuple
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy import select
-from dotenv import dotenv_values
+from safe_db import safe_test_url
 
 from app.core.security import hash_password, verify_password, hash_token, verify_token_hash, create_access_token, decode_access_token
 from app.services.email import BaseEmailService
@@ -27,14 +27,7 @@ class MockEmailService(BaseEmailService):
 @pytest.fixture
 async def pg_auth_session():
     """Isolated AsyncSession against real PostgreSQL with guaranteed transaction rollback."""
-    env = dotenv_values(".env")
-    raw_url = env.get("DATABASE_URL", "")
-    if raw_url.startswith("postgresql://"):
-        async_url = raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    else:
-        async_url = raw_url
-
-    engine = create_async_engine(async_url, echo=False)
+    engine = create_async_engine(safe_test_url(), echo=False)  # local test database only
     session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_factory() as session:
