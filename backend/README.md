@@ -127,3 +127,16 @@ Invoke-RestMethod -Uri http://127.0.0.1:8000/api/ready
 # 3. Interactive OpenAPI Docs (Swagger):
 # Visit: http://127.0.0.1:8000/docs
 ```
+
+---
+
+## 9. Use the Website with the Backend (Development)
+
+The Vite dev server (`npm run dev` in the project root, port 5173) forwards every request that
+starts with `/api` to this backend on `http://127.0.0.1:8000` (see `vite.config.js`).
+Start the backend first (step 7), then the website.
+
+Quick check: with both running, open <http://localhost:5173/api/health>. You should see the same
+JSON as <http://127.0.0.1:8000/api/health>.
+
+This proxy is for development only. A deployed website needs its own routing to a hosted backend.

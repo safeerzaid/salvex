@@ -6,6 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    port: 5173
+    port: 5173,
+    // Development only: send /api requests to the FastAPI backend (run it on port 8000).
+    proxy: {
+      '/api': 'http://127.0.0.1:8000'
+    }
   }
 })
