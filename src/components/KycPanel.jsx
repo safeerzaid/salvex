@@ -3,14 +3,12 @@ import {
   AlertTriangle, CheckCircle2, Clock, Download, FileText, Loader2, RotateCcw, Send, ShieldCheck, Trash2, Upload,
 } from 'lucide-react';
 import {
-  ACCEPTED_TYPES, DOCUMENT_LABELS, DOCUMENT_TYPES, MAX_FILE_BYTES, documentUrl, getMyKyc, setAadhaar, startSubmission, submitForReview,
-  uploadDocument, withdrawDocument,
+  ACCEPTED_TYPES, DOCUMENT_TYPES, MAX_FILE_BYTES, documentTypesFor, documentUrl, getMyKyc, setAadhaar,
+  startSubmission, submitForReview, typeLabel, uploadDocument, withdrawDocument,
 } from '../api/kyc';
 import { useAuth } from '../auth/useAuth';
 import './KycPanel.css';
 import Select from './ui/Select';
-
-const TYPE_LABEL = DOCUMENT_LABELS;
 
 function formatSize(bytes) {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -38,6 +36,16 @@ export default function KycPanel() {
   const [docType, setDocType] = useState(DOCUMENT_TYPES[0].value);
   const [file, setFile] = useState(null);
   const fileInput = useRef(null);
+
+  // The upload form follows the document types the server says are required, so it can never fall behind
+  // the backend's KYC_REQUIRED_DOCUMENTS setting and leave a required type with no way to upload it (which
+  // would keep "Submit for review" disabled for ever).
+  const docTypes = documentTypesFor(state.data?.submission);
+  const docTypeKey = docTypes.map((t) => t.value).join(',');
+  useEffect(() => {
+    const values = docTypeKey.split(',');
+    setDocType((current) => (values.includes(current) ? current : values[0]));
+  }, [docTypeKey]);
 
   const load = useCallback(async () => {
     try {
@@ -89,7 +97,12 @@ export default function KycPanel() {
   const missing = submission?.required_documents || [];
   const needsAadhaar = Boolean(submission?.aadhaar_number_needed);
   const ready = activeDocs.length > 0 && missing.length === 0 && !needsAadhaar;
-  const checklist = DOCUMENT_TYPES.filter((t) => t.value !== 'other');
+  const checklist = docTypes.filter((t) => t.value !== 'other');
+  const blockers = [
+    ...(needsAadhaar ? ['Your Aadhaar number — enter it under "What we need" above.'] : []),
+    ...missing.map((m) => `${typeLabel(m)} — upload it under "Add a document" above.`),
+    ...(activeDocs.length === 0 && missing.length === 0 ? ['At least one document.'] : []),
+  ];
 
   const handleUpload = async (event) => {
     event.preventDefault();
@@ -103,7 +116,7 @@ export default function KycPanel() {
   };
 
   const handleWithdraw = (doc) => {
-    if (!window.confirm(`Remove "${TYPE_LABEL[doc.document_type] || 'this document'}" from your submission?`)) return;
+    if (!window.confirm(`Remove "${typeLabel(doc.document_type)}" from your submission?`)) return;
     run(doc.id, () => withdrawDocument(doc.id), 'Document removed from your submission.');
   };
 
@@ -188,7 +201,7 @@ export default function KycPanel() {
             <label className="kyc-field">
               <span>Document type</span>
               <Select value={docType} onChange={(e) => setDocType(e.target.value)}>
-                {DOCUMENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                {docTypes.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </Select>
             </label>
             <label className="kyc-field kyc-file-field">
@@ -201,7 +214,7 @@ export default function KycPanel() {
               <span>{busy === 'upload' ? 'Uploading…' : 'Upload'}</span>
             </button>
           </div>
-          <p className="kyc-hint">{DOCUMENT_TYPES.find((t) => t.value === docType)?.hint}</p>
+          <p className="kyc-hint">{docTypes.find((t) => t.value === docType)?.hint}</p>
         </form>
       )}
 
@@ -213,7 +226,7 @@ export default function KycPanel() {
               <li key={doc.id} className={doc.withdrawn_at ? 'kyc-doc withdrawn' : 'kyc-doc'}>
                 <FileText size={20} className="kyc-doc-icon" />
                 <div className="kyc-doc-info">
-                  <strong>{TYPE_LABEL[doc.document_type] || doc.document_type}</strong>
+                  <strong>{typeLabel(doc.document_type)}</strong>
                   <span>
                     {doc.content_type === 'application/pdf' ? 'PDF' : doc.content_type === 'image/png' ? 'PNG' : 'JPEG'}
                     {' · '}{formatSize(doc.size_bytes)}{' · '}uploaded {formatDate(doc.uploaded_at)}
@@ -239,11 +252,20 @@ export default function KycPanel() {
 
       {editable && (
         <div className="kyc-submit-bar">
-          <span>{ready ? 'Everything is ready.' : `Still needed: ${[
-            ...(needsAadhaar ? ['Aadhaar number'] : []), ...missing.map((m) => TYPE_LABEL[m] || m),
-          ].join(', ') || 'at least one document'}.`}</span>
+          {ready ? (
+            <span className="kyc-submit-ready"><CheckCircle2 size={18} /> Everything is ready.</span>
+          ) : (
+            <div className="kyc-blocked" id="kyc-blockers" role="status">
+              <AlertTriangle size={18} />
+              <div>
+                <strong>You cannot submit yet — {blockers.length === 1 ? '1 thing is' : `${blockers.length} things are`} still missing:</strong>
+                <ul>{blockers.map((b) => <li key={b}>{b}</li>)}</ul>
+              </div>
+            </div>
+          )}
           <button type="button" className="salvex-btn salvex-btn-primary" disabled={!ready || busy === 'submit'}
-            onClick={handleSubmit}>
+            onClick={handleSubmit} aria-describedby={ready ? undefined : 'kyc-blockers'}
+            title={ready ? undefined : `Still needed: ${blockers.join(' ')}`}>
             {busy === 'submit' ? <Loader2 size={16} className="kyc-spin" /> : <Send size={16} />}
             <span>{submission.status === 'changes_requested' ? 'Send again for review' : 'Submit for review'}</span>
           </button>

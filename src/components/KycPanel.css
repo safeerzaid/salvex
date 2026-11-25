@@ -237,3 +237,12 @@
 .kyc-aadhaar .kyc-hint { grid-column: 1 / -1; margin: 0; }
 .kyc-aadhaar input { letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
 @media (max-width: 560px) { .kyc-aadhaar { grid-template-columns: 1fr; } }
+
+/* why "Submit for review" is still disabled, spelled out next to the button */
+.kyc-submit-ready { display: inline-flex; align-items: center; gap: 8px; color: #86EFAC; }
+.kyc-submit-ready svg { flex-shrink: 0; }
+.kyc-blocked { display: flex; align-items: flex-start; gap: 10px; flex: 1 1 320px; min-width: 0; }
+.kyc-blocked > svg { flex-shrink: 0; margin-top: 2px; color: #FBBF24; }
+.kyc-blocked strong { display: block; color: #FFFFFF; font-weight: 600; }
+.kyc-blocked ul { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.kyc-blocked li { line-height: 1.45; }

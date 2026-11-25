@@ -58,6 +58,7 @@ class KycSubmissionOut(BaseModel):
     decisions: List[KycDecisionForUser]
     aadhaar_masked: Optional[str] = None          # "XXXX XXXX 1234"
     required_documents: List[str] = []            # document types still needed before submitting
+    all_required_documents: List[str] = []        # every document type needed, whether uploaded yet or not
     aadhaar_number_needed: bool = False
 
     model_config = ConfigDict(from_attributes=True)

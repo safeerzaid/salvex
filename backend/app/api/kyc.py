@@ -38,6 +38,7 @@ async def _submission_out(db: AsyncSession, submission_id: uuid.UUID) -> KycSubm
     return KycSubmissionOut.model_validate(submission).model_copy(update={
         "aadhaar_masked": masked(submission.aadhaar_last4),
         "required_documents": await kyc_service.missing_documents(db, submission.id),
+        "all_required_documents": kyc_service.required_document_types(),
         "aadhaar_number_needed": settings.KYC_REQUIRE_AADHAAR_NUMBER and not submission.aadhaar_last4,
     })
 
