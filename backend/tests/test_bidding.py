@@ -365,3 +365,39 @@ async def test_catalogue_cards_link_to_the_open_auction_and_my_bids_has_a_photo(
     assert next(v for v in listed["items"] if v["id"] == vid)["auction"]["id"] == aid
     row = (await api.client.get("/api/bids/mine", headers=headers)).json()["items"][0]
     assert row["photo_id"] == auction["vehicle"]["photo_ids"][0]
+
+
+# ------------------------------------------- a vehicle can go back to auction as often as needed
+async def test_a_vehicle_can_be_auctioned_again_after_an_auction_with_no_bids(api, storage):
+    """Client, 2026-11-26: when the quote is not good enough the vehicle goes back up, maybe next day."""
+    admin, _, _, aid = await live_auction(api)
+    assert (await action(api, admin, aid, "close", reason="Ended")).status_code == 200
+
+    async with api.db() as db:
+        vid = (await db.execute(select(Auction.vehicle_id).where(Auction.id == uuid.UUID(aid)))).scalar_one()
+    again = await new_auction(api, admin, str(vid), starts_at=at(60), ends_at=at(180))
+    assert again.status_code == 201, again.text
+    # And again after that one, too: there is no limit.
+    assert (await action(api, admin, again.json()["id"], "cancel", reason="Not needed")).status_code == 200
+    assert (await new_auction(api, admin, str(vid), starts_at=at(60), ends_at=at(180))).status_code == 201
+
+
+async def test_a_sale_that_still_stands_is_the_only_thing_that_blocks_a_new_auction(api, storage):
+    admin, _, _, aid = await live_auction(api)
+    headers, _ = await verified_bidder(api)
+    assert (await bid(api, headers, aid, "60000")).status_code == 201
+    assert (await action(api, admin, aid, "close", reason="Ended")).status_code == 200
+
+    async with api.db() as db:
+        vid = (await db.execute(select(Auction.vehicle_id).where(Auction.id == uuid.UUID(aid)))).scalar_one()
+    blocked = await new_auction(api, admin, str(vid), starts_at=at(60), ends_at=at(180))
+    assert blocked.status_code == 409 and blocked.json()["code"] == "vehicle_sale_still_open"
+    assert "Cancel that order" in blocked.json()["detail"]          # the message says how to release it
+
+    # Cancelling the sale releases the vehicle straight away.
+    async with api.db() as db:
+        from app.models.order import Order
+        order = (await db.execute(select(Order).where(Order.auction_id == uuid.UUID(aid)))).scalar_one()
+        order.status = "cancelled"
+        await db.commit()
+    assert (await new_auction(api, admin, str(vid), starts_at=at(60), ends_at=at(180))).status_code == 201

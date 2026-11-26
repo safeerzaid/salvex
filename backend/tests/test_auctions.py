@@ -229,8 +229,10 @@ async def test_closing_with_a_highest_bidder_sells_and_locks_the_vehicle(api, st
     assert closed["result"] == "sold" and closed["current_winner_id"] == str(bidder_id)
     entry = [h for h in closed["history"] if h["action"] == "auction.close"][0]
     assert entry["details"]["final_price"] == "81000.00" and entry["details"]["winner_id"] == str(bidder_id)
+    # A finished auction never blocks the next one; a sale that still stands does, until it is cancelled
+    # (client, 2026-11-26). The message names the order so the admin knows what to cancel.
     sold_again = await new_auction(api, admin, vid)
-    assert sold_again.status_code == 409 and sold_again.json()["code"] == "vehicle_already_auctioned"
+    assert sold_again.status_code == 409 and sold_again.json()["code"] == "vehicle_sale_still_open"
     locked = await api.client.patch(f"/api/vehicles/{vid}", headers=admin, json={"location": "Moved"})
     assert locked.status_code == 409 and locked.json()["code"] == "vehicle_in_auction"
 

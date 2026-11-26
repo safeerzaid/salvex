@@ -25,7 +25,7 @@ from app.core.config import settings
 from app.core.errors import ApiError
 from app.models.user import User
 from app.models.vehicle import ACTIVE_STATUSES, EDITABLE_STATUSES, Vehicle, VehiclePhoto
-from app.services.auctions import vehicle_locked_by_auction
+from app.services.auctions import require_free_to_relist, vehicle_locked_by_auction
 from app.services.image_meta import strip_metadata
 from app.services.kyc_files import JPEG, PNG, validate_upload
 from app.services.notifications import notify, notify_admins
@@ -72,7 +72,10 @@ async def _lock_editable(db: AsyncSession, actor: User, vehicle_id: uuid.UUID) -
     if vehicle.status not in allowed:
         raise ApiError(409, "This vehicle can no longer be changed.", "vehicle_not_editable")
     if vehicle.status == "approved" and await vehicle_locked_by_auction(db, vehicle.id):
-        raise ApiError(409, "This vehicle is in an auction (or sold) and cannot be changed.", "vehicle_in_auction")
+        # Only an UNFINISHED auction or a sale that still stands locks a vehicle. Once its last auction
+        # has finished it can be edited, auctioned again, or relisted (client, 2026-11-26).
+        raise ApiError(409, "This vehicle is in an auction that has not finished, or sold with the sale "
+                            "still standing, so it cannot be changed yet.", "vehicle_in_auction")
     return vehicle
 
 
@@ -120,8 +123,9 @@ async def update_vehicle(db: AsyncSession, actor: User, vehicle_id: uuid.UUID, c
                                        or changes.get("superdari", vehicle.superdari) is None):
         raise ApiError(422, "Ready to Lift vehicles need KM driven and Superdari (Yes / No).", "ready_to_lift_details")
     if "listing_type" in changes and changes["listing_type"] != vehicle.listing_type and vehicle.status == "approved":
-        if await vehicle_locked_by_auction(db, vehicle.id):
-            raise ApiError(409, "This vehicle has an auction; it cannot become Ready to Lift.", "vehicle_has_auction")
+        # A finished auction no longer holds the vehicle: it can go to Ready to Lift, or back into an
+        # auction, as often as needed (client, 2026-11-26).
+        await require_free_to_relist(db, vehicle.id, "change the listing")
     damage = changes.get("damage_type", vehicle.damage_type)
     if damage == "other":
         if not changes.get("damage_other", vehicle.damage_other):

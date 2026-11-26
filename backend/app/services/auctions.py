@@ -126,6 +126,42 @@ async def vehicle_locked_by_auction(db: AsyncSession, vehicle_id: uuid.UUID) -> 
     return found is not None
 
 
+async def open_auction_exists(db: AsyncSession, vehicle_id: uuid.UUID) -> bool:
+    """True while this vehicle has an auction that has not finished (scheduled or paused)."""
+    return (await db.execute(
+        select(Auction.id).where(Auction.vehicle_id == vehicle_id, Auction.status.in_(OPEN_STATUSES)).limit(1)
+    )).first() is not None
+
+
+async def live_sale_order(db: AsyncSession, vehicle_id: uuid.UUID):
+    """
+    The order for a sale of this vehicle that is still standing, or None.
+
+    A vehicle may be auctioned again as often as the company likes (client, 2026-11-26): a finished
+    auction never blocks the next one. The ONE thing that does is a sale that still stands - the same
+    vehicle must not be promised to two buyers. Cancelling that order (Orders screen, which also tells
+    the buyer) releases the vehicle at once.
+    """
+    return (await db.execute(
+        select(Order).join(Auction, Auction.id == Order.auction_id)
+        .where(Auction.vehicle_id == vehicle_id, Auction.result == "sold")
+        .where(Order.status.not_in(("defaulted", "cancelled")))
+        .order_by(Order.created_at.desc()).limit(1)
+    )).scalar_one_or_none()
+
+
+async def require_free_to_relist(db: AsyncSession, vehicle_id: uuid.UUID, what: str) -> None:
+    """Raise unless this vehicle can go into a new auction (or change listing) right now."""
+    if await open_auction_exists(db, vehicle_id):
+        raise ApiError(409, f"This vehicle already has an auction that has not finished. "
+                            f"Close or cancel it before you {what}.", "vehicle_already_auctioned")
+    order = await live_sale_order(db, vehicle_id)
+    if order is not None:
+        raise ApiError(409, f"This vehicle was sold in an earlier auction and order {order.number} still "
+                            f"stands. Cancel that order on the Orders screen, then you can {what}.",
+                       "vehicle_sale_still_open")
+
+
 # ---------------------------------------------------------------------------- create and edit
 async def create_auction(db: AsyncSession, actor: User, data: dict) -> Auction:
     now = now_utc()
@@ -140,8 +176,9 @@ async def create_auction(db: AsyncSession, actor: User, data: dict) -> Auction:
     if vehicle.listing_type == "ready_to_lift":
         raise ApiError(409, "Ready to Lift vehicles are not auctioned. Change the listing to Auction first.",
                        "ready_to_lift_not_auctioned")
-    if await vehicle_locked_by_auction(db, vehicle.id):
-        raise ApiError(409, "This vehicle already has an open auction or has been sold.", "vehicle_already_auctioned")
+    # A vehicle may be auctioned as many times as the company likes; only an unfinished auction or a
+    # sale that still stands gets in the way (client, 2026-11-26).
+    await require_free_to_relist(db, vehicle.id, "auction it again")
     _check_window(data["starts_at"], data["ends_at"], now)
     minutes = data.get("extension_minutes") or settings.AUCTION_DEFAULT_EXTENSION_MINUTES
     auction = Auction(
