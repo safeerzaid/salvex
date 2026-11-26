@@ -12,7 +12,11 @@ created when an auction closes is still the one for the With RC winner. The new 
 columns mirror them for the second ladder. starting_price_without_rc is nullable: when it is
 not set that ladder simply has no expected amount, and any first bid is accepted.
 
-Existing bids are all With RC: that is the only kind that existed.
+Existing bids are all With RC: that is the only kind that existed. They are backfilled by the column's
+own DEFAULT rather than an UPDATE, because auction_bids is append-only - a BEFORE UPDATE OR DELETE
+trigger (auction_bids_no_update_delete) rejects any UPDATE, however few rows it touches. Adding a NOT
+NULL column with a default is metadata-only in PostgreSQL 11+, so no row is rewritten and no row
+trigger fires.
 
 Revision ID: c7e4a9b2d5f8
 Revises: a4d6b2f8c013
@@ -32,9 +36,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # ---------------------------------------------------------------- auction_bids.rc_option
-    op.add_column('auction_bids', sa.Column('rc_option', sa.String(length=12), nullable=True))
-    op.execute("UPDATE auction_bids SET rc_option = 'with_rc' WHERE rc_option IS NULL")
-    op.alter_column('auction_bids', 'rc_option', nullable=False)
+    op.add_column('auction_bids', sa.Column('rc_option', sa.String(length=12), nullable=False,
+                                            server_default='with_rc'))
+    op.alter_column('auction_bids', 'rc_option', server_default=None)   # new bids must say which ladder
     op.create_check_constraint('ck_auction_bids_rc_option', 'auction_bids',
                                "rc_option IN ('with_rc', 'without_rc')")
 
@@ -70,8 +74,11 @@ def downgrade() -> None:
     op.drop_column('auctions', 'current_price_without_rc')
     op.drop_column('auctions', 'starting_price_without_rc')
 
-    # Without RC bids would break the old "one amount per auction" rule, so they go first.
+    # Without RC bids would break the old "one amount per auction" rule, so they go first. The
+    # append-only trigger has to stand aside for that one statement.
+    op.execute("ALTER TABLE auction_bids DISABLE TRIGGER auction_bids_no_update_delete")
     op.execute("DELETE FROM auction_bids WHERE rc_option = 'without_rc'")
+    op.execute("ALTER TABLE auction_bids ENABLE TRIGGER auction_bids_no_update_delete")
     op.drop_constraint('uq_auction_bids_auction_option_amount', 'auction_bids', type_='unique')
     op.create_unique_constraint('uq_auction_bids_auction_amount', 'auction_bids', ['auction_id', 'amount'])
     op.drop_constraint('ck_auction_bids_rc_option', 'auction_bids', type_='check')
