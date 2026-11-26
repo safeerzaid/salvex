@@ -101,10 +101,19 @@ function ResultDetail({ id, onClose }) {
         </div>
 
         <div className="adm-grid-3">
-          <div className="adm-stat"><span>Winning bid</span><strong>{money(r.winning_amount)}</strong></div>
-          <div className="adm-stat"><span>Starting price</span><strong>{money(r.starting_price)}</strong></div>
-          <div className="adm-stat"><span>Bids</span><strong>{r.bid_count}</strong></div>
+          <div className="adm-stat"><span>Winning bid (With RC)</span><strong>{money(r.winning_amount)}</strong></div>
+          <div className="adm-stat"><span>Expected — With RC</span><strong>{money(r.starting_price)}</strong></div>
+          <div className="adm-stat"><span>Bids — With RC</span><strong>{r.bid_count}</strong></div>
           {r.claim_number && <div className="adm-stat"><span>Claim number</span><strong className="mono">{r.claim_number}</strong></div>}
+        </div>
+
+        {/* The second rate the company quotes the insurer. Reported whatever the With RC result was. */}
+        <div className="adm-grid-3">
+          <div className="adm-stat"><span>Best rate — Without RC</span>
+            <strong>{r.highest_without_rc ? money(r.highest_without_rc) : '—'}</strong></div>
+          <div className="adm-stat"><span>Expected — Without RC</span>
+            <strong>{r.starting_price_without_rc ? money(r.starting_price_without_rc) : '—'}</strong></div>
+          <div className="adm-stat"><span>Bids — Without RC</span><strong>{r.bid_count_without_rc ?? 0}</strong></div>
         </div>
 
         {sold && (

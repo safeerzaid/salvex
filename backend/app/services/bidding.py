@@ -7,8 +7,9 @@ Placing a bid is ONE database transaction:
      after another - two bids can never both "win" the same moment;
   3. checks against the SERVER clock and the locked row: the auction is live; the bidder is an active,
      KYC-verified bidder (re-read now, not from the start of the request) and not the seller;
-  4. amount rule (company decision): the first bid must be at least the starting price, every later bid
-     only has to be higher than the current highest bid; the current highest bidder cannot bid again;
+  4. amount rule (company decision), applied WITHIN the chosen ladder: the first bid must be at least
+     that ladder's expected amount, every later bid only has to be higher than that ladder's current
+     highest bid; that ladder's current highest bidder cannot bid again;
   5. the bid is stored (append-only), the auction's current price / winner / count are updated, and the
      late-bid time extension is applied when the admin switched it on;
   6. one commit.
@@ -31,6 +32,31 @@ from app.models.user import User
 from app.models.vehicle import Vehicle
 from app.services.orders import bidding_refusal
 from app.services.notifications import notify, notify_admins
+
+
+# Every auction runs two ladders at once (client, 2026-11-26): the vehicle sold WITH its RC and
+# WITHOUT it. The company has to quote the insurer both rates, so both are collected in the same
+# auction. They never compete: each keeps its own expected amount, highest bid, leader and count, and
+# one bidder may lead both. The original columns are the With RC ladder, so everything that already
+# read them - the order made when an auction closes, results, fees - is unchanged.
+RC_OPTIONS = ("with_rc", "without_rc")
+RC_LABEL = {"with_rc": "With RC", "without_rc": "Without RC"}
+
+
+@dataclass(frozen=True)
+class Ladder:
+    """The four auction columns one RC option uses."""
+    starting: str
+    price: str
+    winner: str
+    count: str
+
+
+LADDERS = {
+    "with_rc": Ladder("starting_price", "current_price", "current_winner_id", "bid_count"),
+    "without_rc": Ladder("starting_price_without_rc", "current_price_without_rc",
+                         "current_winner_without_rc_id", "bid_count_without_rc"),
+}
 
 
 @dataclass
@@ -63,7 +89,10 @@ async def _repeat(db: AsyncSession, bid: AuctionBid, auction_id: uuid.UUID) -> B
 
 
 async def place_bid(db: AsyncSession, bidder: User, auction_id: uuid.UUID, amount: Decimal,
-                    idempotency_key: Optional[str]) -> BidOutcome:
+                    idempotency_key: Optional[str], rc_option: str = "with_rc") -> BidOutcome:
+    if rc_option not in LADDERS:
+        raise ApiError(422, "Choose whether you are bidding with RC or without RC.", "invalid_rc_option")
+    ladder = LADDERS[rc_option]
     earlier = await _existing_by_key(db, bidder.id, idempotency_key)
     if earlier is not None:
         return await _repeat(db, earlier, auction_id)
@@ -96,24 +125,28 @@ async def place_bid(db: AsyncSession, bidder: User, auction_id: uuid.UUID, amoun
     seller_id = (await db.execute(select(Vehicle.owner_id).where(Vehicle.id == auction.vehicle_id))).scalar_one()
     if seller_id == bidder.id:
         raise ApiError(403, "You cannot bid on your own vehicle.", "own_vehicle")
-    if auction.current_winner_id == bidder.id:
-        raise ApiError(409, "You are already the highest bidder.", "already_highest")
-    if auction.current_price is None:
-        if amount < auction.starting_price:
-            # The starting price is hidden from bidders (client, 2026-11-26), so the refusal must not
+    label = RC_LABEL[rc_option]
+    starting, price = getattr(auction, ladder.starting), getattr(auction, ladder.price)
+    if getattr(auction, ladder.winner) == bidder.id:
+        raise ApiError(409, f"You are already the highest bidder for {label}.", "already_highest")
+    if price is None:
+        # No expected amount set for this ladder means any first bid is accepted.
+        if starting is not None and amount < starting:
+            # The expected amount is hidden from bidders (client, 2026-11-26), so the refusal must not
             # contain it: a bidder could otherwise find it by bidding 1 and reading the message back.
             raise ApiError(409, "Your bid is lower than the expected price. Kindly increase your bid.",
                            "bid_below_starting_price")
-    elif amount <= auction.current_price:
-        raise ApiError(409, f"Your bid must be higher than the current bid of {auction.current_price}.", "bid_too_low")
+    elif amount <= price:
+        raise ApiError(409, f"Your {label} bid must be higher than the current {label} bid of {price}.",
+                       "bid_too_low")
 
-    previous_leader = auction.current_winner_id
+    previous_leader = getattr(auction, ladder.winner)
     bid = AuctionBid(auction_id=auction.id, bidder_id=bidder.id, amount=amount, created_at=now,
-                     idempotency_key=idempotency_key)
+                     idempotency_key=idempotency_key, rc_option=rc_option)
     db.add(bid)
-    auction.current_price = amount
-    auction.current_winner_id = bidder.id
-    auction.bid_count += 1
+    setattr(auction, ladder.price, amount)
+    setattr(auction, ladder.winner, bidder.id)
+    setattr(auction, ladder.count, getattr(auction, ladder.count) + 1)
 
     extended = False
     if auction.extension_enabled:
@@ -132,11 +165,13 @@ async def place_bid(db: AsyncSession, bidder: User, auction_id: uuid.UUID, amoun
             raise
         return await _repeat(db, earlier, auction_id)
     if previous_leader is not None and previous_leader != bidder.id:
-        await notify(db, previous_leader, "outbid", "You have been outbid",
-                     f"Someone bid {amount} on an auction you were leading. Bid again before it ends.", f"/auctions/{auction.id}")
+        await notify(db, previous_leader, "outbid", f"You have been outbid ({label})",
+                     f"Someone bid {amount} {label} on an auction you were leading. "
+                     f"Bid again before it ends.", f"/auctions/{auction.id}")
     if extended:
         await record_audit(db, actor=bidder, action="auction.auto_extend", target_type="auction", target_id=auction.id,
-                           details={"bid_id": bid.id, "old_ends_at": old_end.isoformat(), "new_ends_at": auction.ends_at.isoformat()})
+                           details={"bid_id": bid.id, "rc_option": rc_option,
+                                    "old_ends_at": old_end.isoformat(), "new_ends_at": auction.ends_at.isoformat()})
     return BidOutcome(bid=bid, auction=auction, extended=extended, repeated=False)
 
 

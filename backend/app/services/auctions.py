@@ -146,6 +146,7 @@ async def create_auction(db: AsyncSession, actor: User, data: dict) -> Auction:
     minutes = data.get("extension_minutes") or settings.AUCTION_DEFAULT_EXTENSION_MINUTES
     auction = Auction(
         vehicle_id=vehicle.id, status="scheduled", starting_price=data["starting_price"],
+        starting_price_without_rc=data.get("starting_price_without_rc"),
         starts_at=data["starts_at"], ends_at=data["ends_at"], scheduled_ends_at=data["ends_at"],
         extension_enabled=data.get("extension_enabled", False), extension_minutes=minutes, created_by_id=actor.id,
     )
@@ -156,6 +157,8 @@ async def create_auction(db: AsyncSession, actor: User, data: dict) -> Auction:
         await db.rollback()
         raise ApiError(409, "This vehicle already has an open auction.", "vehicle_already_auctioned") from None
     await _audit(db, actor, "create", auction, vehicle_id=vehicle.id, starting_price=str(auction.starting_price),
+                 starting_price_without_rc=(str(auction.starting_price_without_rc)
+                                            if auction.starting_price_without_rc is not None else None),
                  starts_at=_iso(auction.starts_at), ends_at=_iso(auction.ends_at),
                  extension_enabled=auction.extension_enabled, extension_minutes=minutes)
     return auction
@@ -166,8 +169,9 @@ async def update_auction(db: AsyncSession, actor: User, auction_id: uuid.UUID, c
     auction = await _lock(db, auction_id)
     await _recheck_admin(db, actor)
     _require_open(auction)
-    schedule_fields = {"starting_price", "starts_at", "ends_at"} & set(changes)
-    if schedule_fields and (auction.phase(now) != "upcoming" or auction.bid_count > 0):
+    schedule_fields = {"starting_price", "starting_price_without_rc", "starts_at", "ends_at"} & set(changes)
+    if schedule_fields and (auction.phase(now) != "upcoming"
+                            or auction.bid_count > 0 or auction.bid_count_without_rc > 0):
         raise ApiError(409, "Price and times can only be changed before the auction starts.", "auction_started")
     if schedule_fields & {"starts_at", "ends_at"}:
         _check_window(changes.get("starts_at", auction.starts_at), changes.get("ends_at", auction.ends_at), now)
@@ -261,17 +265,25 @@ async def finish_auction(db: AsyncSession, auction: Auction, actor: Optional[Use
     order = await create_order_for(db, auction)  # the winner's order, in this same transaction
     vehicle = (await db.execute(select(Vehicle).where(Vehicle.id == auction.vehicle_id))).scalar_one()
     title = f"{vehicle.manufacturing_year} {vehicle.make} {vehicle.model} {vehicle.variant} ({vehicle.registration_number})"
+    # Both rates go to the insurer, so the Without RC ladder's best bid is reported even though the
+    # order is made for the With RC winner (client, 2026-11-26).
+    without_rc = ""
+    if auction.current_price_without_rc is not None:
+        other = (await db.execute(select(User).where(User.id == auction.current_winner_without_rc_id))).scalar_one()
+        without_rc = (f" Best Without RC rate: {auction.current_price_without_rc} "
+                      f"({other.name}, {other.buyer_id or other.email}).")
     if order is not None:
         winner = (await db.execute(select(User).where(User.id == order.buyer_id))).scalar_one()
         await notify_admins(db, "auction_won", f"{title} sold",
-                            f"Winner: {winner.name} ({winner.buyer_id or winner.email}"
+                            f"Winner (With RC): {winner.name} ({winner.buyer_id or winner.email}"
                             f"{', ' + winner.mobile if winner.mobile else ''}). Winning bid {order.amount}. "
                             + (f"Order {order.number} is awaiting payment." if settings.ONLINE_PAYMENT_FLOW
-                               else "Contact the buyer to complete the deal."),
+                               else "Contact the buyer to complete the deal.") + without_rc,
                             f"/admin?tab=results&status=sold&open={auction.id}")
     else:
         await notify_admins(db, "auction_no_sale", f"{title}: no sale",
-                            "The auction ended without any bid.", f"/admin?tab=results&status=no_sale&open={auction.id}")
+                            "The auction ended without a With RC bid." + (without_rc or ""),
+                            f"/admin?tab=results&status=no_sale&open={auction.id}")
     if order is not None:
         name = f"{vehicle.manufacturing_year} {vehicle.make} {vehicle.model} {vehicle.variant}"
         if settings.ONLINE_PAYMENT_FLOW:
@@ -290,7 +302,10 @@ async def finish_auction(db: AsyncSession, auction: Auction, actor: Optional[Use
                          f"The auction closed with a winning bid of {order.amount}.", "/seller/dashboard")
     await _audit(db, actor, "close", auction, reason=reason, result=auction.result, bid_count=auction.bid_count,
                  final_price=str(auction.current_price) if auction.current_price is not None else None,
-                 winner_id=auction.current_winner_id)
+                 winner_id=auction.current_winner_id, bid_count_without_rc=auction.bid_count_without_rc,
+                 final_price_without_rc=(str(auction.current_price_without_rc)
+                                         if auction.current_price_without_rc is not None else None),
+                 winner_without_rc_id=auction.current_winner_without_rc_id)
     return auction
 
 

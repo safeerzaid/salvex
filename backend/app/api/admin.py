@@ -448,7 +448,7 @@ async def admin_bid_history(auction_id: uuid.UUID, params: PaginationParams = De
     rows = (await db.execute(stmt.limit(params.page_size).offset(params.offset))).all()
     return Page[AdminBid](
         items=[AdminBid(id=b.id, bidder_id=b.bidder_id, bidder_name=name, bidder_email=email,
-                        amount=b.amount, created_at=b.created_at) for b, name, email in rows],
+                        amount=b.amount, rc_option=b.rc_option, created_at=b.created_at) for b, name, email in rows],
         page=params.page, page_size=params.page_size, total=total,
         pages=(total + params.page_size - 1) // params.page_size)
 
@@ -767,6 +767,9 @@ def _result_row(auction, vehicle, winner, order, schema=AdminResultRow, **extra)
         auction_id=auction.id, vehicle_id=vehicle.id, vehicle_title=title, registration_number=vehicle.registration_number,
         category=vehicle.category, result=auction.result, starting_price=auction.starting_price,
         winning_amount=auction.current_price if auction.result == "sold" else None, bid_count=auction.bid_count,
+        # The Without RC ladder is reported whatever the result: the company quotes the insurer both.
+        starting_price_without_rc=auction.starting_price_without_rc,
+        highest_without_rc=auction.current_price_without_rc, bid_count_without_rc=auction.bid_count_without_rc,
         closed_at=auction.closed_at,
         winner_id=winner.id if winner else None, winner_name=winner.name if winner else None,
         winner_email=winner.email if winner else None, winner_mobile=winner.mobile if winner else None,

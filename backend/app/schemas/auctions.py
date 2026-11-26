@@ -33,7 +33,10 @@ class _Strict(BaseModel):
 
 class AuctionCreate(_Strict):
     vehicle_id: uuid.UUID
-    starting_price: Money
+    starting_price: Money                                 # expected amount for the With RC ladder
+    # Expected amount for the Without RC ladder. Optional: left out, that ladder has no minimum and any
+    # first bid is accepted. The two are normally far apart (e.g. 1,00,000 with RC, 40,000 without).
+    starting_price_without_rc: Optional[Money] = None
     starts_at: AwareDatetime
     ends_at: AwareDatetime
     extension_enabled: bool = False
@@ -49,6 +52,7 @@ class AuctionCreate(_Strict):
 class AuctionUpdate(_Strict):
     """Price and times only before the auction starts (and before any bid); extension settings any time."""
     starting_price: Optional[Money] = None
+    starting_price_without_rc: Optional[Money] = None
     starts_at: Optional[AwareDatetime] = None
     ends_at: Optional[AwareDatetime] = None
     extension_enabled: Optional[bool] = None
@@ -95,8 +99,10 @@ class AuctionPublic(BaseModel):
     id: uuid.UUID
     phase: str
     result: Optional[str]
-    current_price: Optional[Decimal]
+    current_price: Optional[Decimal]                 # the With RC ladder
     bid_count: int
+    current_price_without_rc: Optional[Decimal]      # the Without RC ladder; both run on every auction
+    bid_count_without_rc: int
     starts_at: datetime
     ends_at: datetime
     extension_enabled: bool
@@ -108,7 +114,9 @@ class AuctionPublic(BaseModel):
     def build(cls, auction, now: datetime) -> "AuctionPublic":
         return cls(
             id=auction.id, phase=auction.phase(now), result=auction.result,
-            current_price=auction.current_price, bid_count=auction.bid_count, starts_at=auction.starts_at,
+            current_price=auction.current_price, bid_count=auction.bid_count,
+            current_price_without_rc=auction.current_price_without_rc,
+            bid_count_without_rc=auction.bid_count_without_rc, starts_at=auction.starts_at,
             ends_at=auction.ends_at, extension_enabled=auction.extension_enabled,
             extension_minutes=auction.extension_minutes, server_time=now,
             vehicle=CatalogueVehicle.from_vehicle(auction.vehicle),
@@ -135,6 +143,11 @@ class AdminAuctionOut(BaseModel):
     current_price: Optional[Decimal]
     current_winner_id: Optional[uuid.UUID]
     bid_count: int
+    # The Without RC ladder, admin-side: both rates go to the insurer.
+    starting_price_without_rc: Optional[Decimal] = None
+    current_price_without_rc: Optional[Decimal] = None
+    current_winner_without_rc_id: Optional[uuid.UUID] = None
+    bid_count_without_rc: int = 0
     starts_at: datetime
     ends_at: datetime
     scheduled_ends_at: datetime
@@ -186,6 +199,9 @@ class AdminResultRow(BaseModel):
     starting_price: Decimal
     winning_amount: Optional[Decimal]
     bid_count: int
+    starting_price_without_rc: Optional[Decimal] = None
+    highest_without_rc: Optional[Decimal] = None     # the best Without RC rate, to quote the insurer
+    bid_count_without_rc: int = 0
     closed_at: Optional[datetime]
     winner_id: Optional[uuid.UUID] = None
     winner_name: Optional[str] = None

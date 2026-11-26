@@ -24,9 +24,9 @@ def script() -> ScriptDirectory:
 
 def test_migration_history_is_a_single_line_ending_at_the_latest_migration():
     heads = script().get_heads()
-    assert heads == ["a4d6b2f8c013"]
+    assert heads == ["c7e4a9b2d5f8"]
     revisions = [r.revision for r in script().walk_revisions()]
-    assert revisions == ["a4d6b2f8c013", "e8a3c5f1b7d9", "d7f2b4c9e1a3", "c6e1f3a8d2b7", "b4d9f2a6c8e1", "a2c8e5f7b1d3", "f1a7c3e9d2b6", "d8f3a6c1e2b5", "c5d2e8f4a7b9", "b3f7a1d9c2e4", "a9e4d2c6b8f1", "f6c1a8e3b9d5", "e5b9c2d7f1a4", "d4a8f1c3e6b2", "b7e2c4d9a1f3", "8d1f6b2a9c47", "5c3e9a7b1f42", "a4d81c6e5b20", "7b2f4a9c1d3e", "c96cd80717e8", "493b43fb6f05"]
+    assert revisions == ["c7e4a9b2d5f8", "a4d6b2f8c013", "e8a3c5f1b7d9", "d7f2b4c9e1a3", "c6e1f3a8d2b7", "b4d9f2a6c8e1", "a2c8e5f7b1d3", "f1a7c3e9d2b6", "d8f3a6c1e2b5", "c5d2e8f4a7b9", "b3f7a1d9c2e4", "a9e4d2c6b8f1", "f6c1a8e3b9d5", "e5b9c2d7f1a4", "d4a8f1c3e6b2", "b7e2c4d9a1f3", "8d1f6b2a9c47", "5c3e9a7b1f42", "a4d81c6e5b20", "7b2f4a9c1d3e", "c96cd80717e8", "493b43fb6f05"]
 
 
 def test_the_test_database_is_at_the_latest_revision_and_matches_the_models():
@@ -34,7 +34,7 @@ def test_the_test_database_is_at_the_latest_revision_and_matches_the_models():
     try:
         with engine.connect() as conn:
             context = MigrationContext.configure(conn)
-            assert context.get_current_revision() == "a4d6b2f8c013"
+            assert context.get_current_revision() == "c7e4a9b2d5f8"
             assert compare_metadata(context, Base.metadata) == []   # no drift between models and migrations
     finally:
         engine.dispose()

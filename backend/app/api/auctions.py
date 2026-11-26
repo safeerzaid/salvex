@@ -80,16 +80,18 @@ async def place_bid(
     db: AsyncSession = Depends(get_db),
 ):
     enforce_rate_limit("bid", request, ctx.user.email)
-    outcome = await bidding.place_bid(db, ctx.user, auction_id, body.amount, idempotency_key)
+    outcome = await bidding.place_bid(db, ctx.user, auction_id, body.amount, idempotency_key, body.rc_option)
     await db.commit()
     if outcome.repeated:
         response.status_code = 200
     auction, now = outcome.auction, now_utc()
+    ladder = bidding.LADDERS[outcome.bid.rc_option]            # the ladder this bid went into
     return BidResult(
-        bid_id=outcome.bid.id, amount=outcome.bid.amount, placed_at=outcome.bid.created_at, auction_id=auction.id,
-        phase=auction.phase(now), current_price=auction.current_price, bid_count=auction.bid_count,
+        bid_id=outcome.bid.id, amount=outcome.bid.amount, rc_option=outcome.bid.rc_option,
+        placed_at=outcome.bid.created_at, auction_id=auction.id,
+        phase=auction.phase(now), current_price=getattr(auction, ladder.price), bid_count=getattr(auction, ladder.count),
         ends_at=auction.ends_at, time_extended=outcome.extended,
-        you_are_highest=auction.current_winner_id == ctx.user.id, repeated=outcome.repeated, server_time=now,
+        you_are_highest=getattr(auction, ladder.winner) == ctx.user.id, repeated=outcome.repeated, server_time=now,
     )
 
 
@@ -109,7 +111,7 @@ async def bid_history(
     stmt = (select(AuctionBid).where(AuctionBid.auction_id == auction_id)
             .order_by(AuctionBid.created_at.desc(), AuctionBid.amount.desc()))
     return await paginate(db, stmt, params, PublicBid, transform=lambda b: PublicBid(
-        amount=b.amount, placed_at=b.created_at, bidder=labels.get(b.bidder_id, "Bidder"),
+        amount=b.amount, rc_option=b.rc_option, placed_at=b.created_at, bidder=labels.get(b.bidder_id, "Bidder"),
         is_you=viewer is not None and b.bidder_id == viewer.id))
 
 

@@ -5,7 +5,8 @@ import { mockApi, open, USERS } from './helpers/mockApi';
 
 const AID = '42424242-4242-4242-8242-424242424242';
 const auction = () => ({
-  id: AID, phase: 'live', result: null, starting_price: '50000.00', current_price: null, bid_count: 0,
+  id: AID, phase: 'live', result: null, current_price: null, bid_count: 0,
+  current_price_without_rc: null, bid_count_without_rc: 0,
   starts_at: new Date(Date.now() - 3600000).toISOString(), ends_at: new Date(Date.now() + 86400000).toISOString(),
   extension_enabled: true, extension_minutes: 2, server_time: new Date().toISOString(),
   vehicle: {
@@ -44,7 +45,7 @@ test('with mobile verification on, an unverified mobile sees "Verify your mobile
   await open(page, `/auctions/${AID}`);
   await expect(page.getByText('Verify your mobile number to bid')).toBeVisible();
   await expect(page.getByRole('link', { name: /Verify mobile/ })).toHaveAttribute('href', '/dashboard');
-  await expect(page.getByRole('button', { name: 'Place bid' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Place .* bid/ })).toHaveCount(0);
 });
 
 test('with mobile verification on and the mobile verified, the bid form is shown', async ({ page }) => {
@@ -54,7 +55,8 @@ test('with mobile verification on and the mobile verified, the bid form is shown
   api.override(`GET /api/auctions/${AID}/bids`, () => api.json(200, { items: [], total: 0, page: 1, page_size: 20 }));
   api.signIn({ ...USERS.bidder, kyc_status: 'verified', is_mobile_verified: true });
   await open(page, `/auctions/${AID}`);
-  await expect(page.getByRole('button', { name: 'Place bid' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Place With RC bid' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Place Without RC bid' })).toBeVisible();
 });
 
 test('with mobile verification off, the bid form is shown without a verified mobile', async ({ page }) => {
@@ -64,6 +66,7 @@ test('with mobile verification off, the bid form is shown without a verified mob
   api.override(`GET /api/auctions/${AID}/bids`, () => api.json(200, { items: [], total: 0, page: 1, page_size: 20 }));
   api.signIn({ ...USERS.bidder, kyc_status: 'verified', is_mobile_verified: false });
   await open(page, `/auctions/${AID}`);
-  await expect(page.getByRole('button', { name: 'Place bid' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Place With RC bid' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Place Without RC bid' })).toBeVisible();
   await expect(page.getByText('Verify your mobile number to bid')).toHaveCount(0);
 });

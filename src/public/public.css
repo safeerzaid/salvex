@@ -444,3 +444,26 @@
 
 /* No bids yet: the starting price is admin-only, so cards and the bid box show this instead of a price. */
 .pub-no-bids { font-size: 16px; font-weight: 600; color: #64748B; }
+
+/* Two bidding ladders per auction: With RC and Without RC (client, 2026-11-26). */
+.pub-ladders { display: flex; flex-direction: column; gap: 14px; }
+.pub-ladders-note { font-size: 13px; color: #64748B; margin: 0; }
+.pub-ladder { border: 1px solid #E2E8F0; border-radius: var(--radius-lg); padding: 14px; background: #FFFFFF;
+  display: flex; flex-direction: column; gap: 12px; }
+.pub-ladder-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pub-ladder-head h3 { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--color-primary-navy); margin: 0; }
+.pub-ladder-count { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #64748B; }
+.pub-ladder-figure { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.pub-ladder-figure strong { font-size: 26px; font-weight: 800; color: var(--color-auction-red);
+  font-variant-numeric: tabular-nums; line-height: 1.1; }
+.pub-ladder-figure strong.pub-no-bids { font-size: 18px; font-weight: 600; color: #64748B; }
+.pub-ladder-figure span { font-size: 12px; color: #64748B; }
+.pub-hint.small { font-size: 12px; color: #64748B; margin: 0; }
+.pub-confirm-option { font-size: 13px; color: #64748B; margin: -6px 0 0; }
+
+/* Which rate a bid in the history was for. */
+.pub-rc-tag { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; font-size: 11px;
+  font-weight: 600; font-style: normal; letter-spacing: 0.02em; }
+.pub-rc-tag.with_rc { background: #EFF6FF; color: #1D4ED8; }
+.pub-rc-tag.without_rc { background: #FEF3C7; color: #92400E; }

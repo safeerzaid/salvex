@@ -18,10 +18,11 @@ export const getBidHistory = (id) => apiRequest(`/api/auctions/${id}/bids?page_s
 export const listMyBids = (page = 1) => apiRequest(`/api/bids/mine?page=${page}&page_size=50`);
 
 /** One click = one bid: the same key is reused if the request has to be retried. */
-export function placeBid(id, amount, idempotencyKey) {
+/** rcOption is 'with_rc' or 'without_rc': every auction runs both ladders (client, 2026-11-26). */
+export function placeBid(id, amount, idempotencyKey, rcOption = 'with_rc') {
   return apiRequest(`/api/auctions/${id}/bids`, {
     method: 'POST',
-    body: { amount: String(amount), terms_accepted: true },
+    body: { amount: String(amount), terms_accepted: true, rc_option: rcOption },
     headers: { 'Idempotency-Key': idempotencyKey },
   });
 }

@@ -74,7 +74,8 @@ async def test_bell_lists_counts_and_marks_read_only_your_own(api, storage):
     assert (await api.client.get("/api/notifications/unread-count")).status_code == 401
     assert (await api.client.get("/api/notifications/unread-count", headers=first)).json() == {"unread": 1}
     items = (await api.client.get("/api/notifications", headers=first)).json()["items"]
-    assert items[0]["title"] == "You have been outbid" and items[0]["read_at"] is None
+    # The title names the ladder: every auction runs With RC and Without RC (client, 2026-11-26).
+    assert items[0]["title"] == "You have been outbid (With RC)" and items[0]["read_at"] is None
     assert (await api.client.post(f"/api/notifications/{items[0]['id']}/read", headers=second)).status_code == 404
     read = await api.client.post(f"/api/notifications/{items[0]['id']}/read", headers=first)
     assert read.status_code == 200 and read.json()["read_at"]
@@ -106,7 +107,7 @@ async def test_outbox_sends_once_retries_then_gives_up(api, storage):
     await send_pending_emails(api.db, mailer)                       # a second pass sends nothing again
     async with api.db() as db:
         first_email = (await db.get(User, first_id)).email
-    mine = [m for m in mailer.sent if m["title"] == "You have been outbid" and m["to"] == first_email]
+    mine = [m for m in mailer.sent if m["title"] == "You have been outbid (With RC)" and m["to"] == first_email]
     assert len(mine) == 1 and mine[0]["link"] == f"/auctions/{aid}"
 
 
@@ -124,7 +125,7 @@ async def test_suspended_users_get_no_email(api, storage):
     async with api.db() as db:
         note = (await db.execute(select(Notification).where(Notification.user_id == first_id, Notification.kind == "outbid"))).scalar_one()
         await db.refresh(note)
-    assert note.email_status == "skipped" and not [m for m in mailer.sent if m["title"] == "You have been outbid"]
+    assert note.email_status == "skipped" and not [m for m in mailer.sent if m["title"].startswith("You have been outbid")]
 
 
 # ---------------------------------------------------------------------------- spare parts

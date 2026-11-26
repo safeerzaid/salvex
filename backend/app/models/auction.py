@@ -46,6 +46,12 @@ class Auction(Base):
         CheckConstraint("extension_minutes BETWEEN 1 AND 60", name="ck_auctions_extension_minutes"),
         CheckConstraint("bid_count >= 0", name="ck_auctions_bid_count"),
         CheckConstraint("current_price IS NULL OR current_price >= starting_price", name="ck_auctions_current_price"),
+        CheckConstraint("starting_price_without_rc IS NULL OR starting_price_without_rc > 0",
+                        name="ck_auctions_starting_price_without_rc_positive"),
+        CheckConstraint("current_price_without_rc IS NULL OR starting_price_without_rc IS NULL"
+                        " OR current_price_without_rc >= starting_price_without_rc",
+                        name="ck_auctions_current_price_without_rc"),
+        CheckConstraint("bid_count_without_rc >= 0", name="ck_auctions_bid_count_without_rc"),
         # One open auction per vehicle at a time.
         Index("uq_auctions_one_open_per_vehicle", "vehicle_id", unique=True,
               postgresql_where=text("status IN ('scheduled', 'paused')")),
@@ -64,6 +70,16 @@ class Auction(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=True
     )
     bid_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    # The second ladder: the same vehicle bid for WITHOUT its RC (client, 2026-11-26). The columns
+    # above are the With RC ladder. starting_price_without_rc is optional - with no expected amount
+    # set, any first bid in this ladder is accepted.
+    starting_price_without_rc: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
+    current_price_without_rc: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2), nullable=True)
+    current_winner_without_rc_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=True
+    )
+    bid_count_without_rc: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
     ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)

@@ -47,9 +47,72 @@ async def live_auction(api, **overrides) -> tuple[dict, dict, uuid.UUID, str]:
     return admin, seller, seller_id, res.json()["id"]
 
 
-async def bid(api, headers, auction_id, amount, key=None):
+async def bid(api, headers, auction_id, amount, key=None, rc_option="with_rc"):
     extra = {"Idempotency-Key": key} if key else {}
-    return await api.client.post(f"/api/auctions/{auction_id}/bids", headers={**headers, **extra}, json={"amount": amount, "terms_accepted": True})
+    return await api.client.post(f"/api/auctions/{auction_id}/bids", headers={**headers, **extra},
+                                 json={"amount": amount, "terms_accepted": True, "rc_option": rc_option})
+
+
+# ------------------------------------------------- the two ladders: With RC and Without RC
+async def test_with_rc_and_without_rc_are_two_separate_ladders(api, storage):
+    """Every auction takes both rates (client, 2026-11-26). They never compete with each other."""
+    _, _, _, aid = await live_auction(api, starting_price="100000", starting_price_without_rc="40000")
+    first, _ = await verified_bidder(api)
+    second, _ = await verified_bidder(api)
+
+    public = (await api.client.get(f"/api/auctions/{aid}")).json()
+    assert public["current_price"] is None and public["current_price_without_rc"] is None
+    assert public["bid_count"] == 0 and public["bid_count_without_rc"] == 0
+    # Neither ladder's expected amount is public.
+    assert "starting_price" not in public and "starting_price_without_rc" not in public
+
+    # Each ladder keeps its own expected amount.
+    assert (await bid(api, first, aid, "50000")).json()["code"] == "bid_below_starting_price"
+    assert (await bid(api, first, aid, "39999", rc_option="without_rc")).json()["code"] == "bid_below_starting_price"
+
+    # 50,000 is too low With RC but fine Without RC: the ladders do not see each other.
+    low = await bid(api, first, aid, "50000", rc_option="without_rc")
+    assert low.status_code == 201 and low.json()["rc_option"] == "without_rc"
+    assert low.json()["current_price"] == "50000.00" and low.json()["bid_count"] == 1
+
+    high = await bid(api, second, aid, "100000")
+    assert high.status_code == 201 and high.json()["rc_option"] == "with_rc"
+    assert high.json()["current_price"] == "100000.00" and high.json()["bid_count"] == 1
+
+    # The same amount may be bid once in each ladder, by different people.
+    assert (await bid(api, second, aid, "100000", rc_option="without_rc")).status_code == 201
+
+    public = (await api.client.get(f"/api/auctions/{aid}")).json()
+    assert public["current_price"] == "100000.00" and public["bid_count"] == 1
+    assert public["current_price_without_rc"] == "100000.00" and public["bid_count_without_rc"] == 2
+
+    # Leading one ladder does not stop you bidding in the other, but does stop you bidding again in it.
+    assert (await bid(api, second, aid, "120000")).json()["code"] == "already_highest"
+    assert (await bid(api, first, aid, "120000")).status_code == 201
+
+    async with api.db() as db:
+        rows = (await db.execute(select(AuctionBid.rc_option, AuctionBid.amount)
+                                 .where(AuctionBid.auction_id == uuid.UUID(aid)))).all()
+    assert sorted((o, str(a)) for o, a in rows) == [
+        ("with_rc", "100000.00"), ("with_rc", "120000.00"), ("without_rc", "100000.00"), ("without_rc", "50000.00")]
+
+
+async def test_a_bid_needs_a_known_rc_option(api, storage):
+    _, _, _, aid = await live_auction(api)
+    headers, _ = await verified_bidder(api)
+    res = await api.client.post(f"/api/auctions/{aid}/bids", headers=headers,
+                                json={"amount": "60000", "terms_accepted": True, "rc_option": "maybe"})
+    assert res.status_code == 422
+    # Left out entirely it means With RC, so an older client keeps working.
+    res = await api.client.post(f"/api/auctions/{aid}/bids", headers=headers,
+                                json={"amount": "60000", "terms_accepted": True})
+    assert res.status_code == 201 and res.json()["rc_option"] == "with_rc"
+
+
+async def test_without_rc_has_no_minimum_when_no_expected_amount_is_set(api, storage):
+    _, _, _, aid = await live_auction(api, starting_price="100000")        # no Without RC amount
+    headers, _ = await verified_bidder(api)
+    assert (await bid(api, headers, aid, "1", rc_option="without_rc")).status_code == 201
 
 
 # ---------------------------------------------------------------------------- who may bid

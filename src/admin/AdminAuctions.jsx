@@ -189,6 +189,7 @@ function AuctionSettingsForm({ vehicle, chooseVehicle, onCancel, onCreated, canc
     return {
       vehicle_id: vehicle?.id || '',
       starting_price: '',
+      starting_price_without_rc: '',
       starts_at: toLocalInput(new Date(now + 10 * 60000)),
       ends_at: toLocalInput(new Date(now + 24 * 3600000)),
       extension_enabled: true,
@@ -210,6 +211,7 @@ function AuctionSettingsForm({ vehicle, chooseVehicle, onCancel, onCreated, canc
       const created = await createAuction({
         vehicle_id: form.vehicle_id,
         starting_price: String(form.starting_price),
+        ...(form.starting_price_without_rc ? { starting_price_without_rc: String(form.starting_price_without_rc) } : {}),
         starts_at: fromLocalInput(form.starts_at),
         ends_at: fromLocalInput(form.ends_at),
         extension_enabled: form.extension_enabled,
@@ -241,8 +243,13 @@ function AuctionSettingsForm({ vehicle, chooseVehicle, onCancel, onCreated, canc
         </div>
       )}
       <label className="adm-field">
-        <span>Starting price (₹). The first bid must be at least this; later bids just need to be higher.</span>
+        <span>Expected amount — With RC (₹). The first With RC bid must be at least this; later bids just need to be higher. Bidders never see it.</span>
         <input type="number" min="1" step="1" inputMode="numeric" value={form.starting_price} onChange={(e) => set('starting_price', e.target.value)} />
+      </label>
+      <label className="adm-field">
+        <span>Expected amount — Without RC (₹), optional. Leave empty to accept any first Without RC bid.</span>
+        <input type="number" min="1" step="1" inputMode="numeric" value={form.starting_price_without_rc}
+          onChange={(e) => set('starting_price_without_rc', e.target.value)} />
       </label>
       <div className="adm-grid-2">
         <div className="adm-field"><span>Starts</span><DateTimePicker aria-label="Starts" value={form.starts_at} min={toLocalInput(new Date())} onChange={(e) => setForm((f) => followStart(f, e.target.value))} /></div>
@@ -373,9 +380,15 @@ function AuctionDetail({ id, onClose }) {
         </div>
 
         <div className="adm-grid-3">
-          <div className="adm-stat"><span>Starting price</span><strong>{money(a.starting_price)}</strong></div>
-          <div className="adm-stat"><span>Current highest bid</span><strong>{money(a.current_price)}</strong></div>
-          <div className="adm-stat"><span>Bids</span><strong>{a.bid_count}</strong></div>
+          <div className="adm-stat"><span>Expected — With RC</span><strong>{money(a.starting_price)}</strong></div>
+          <div className="adm-stat"><span>Highest — With RC</span><strong>{money(a.current_price)}</strong>
+            <em className="adm-muted small">{a.bid_count} bid{a.bid_count === 1 ? '' : 's'}</em></div>
+          <div className="adm-stat"><span>Highest — Without RC</span>
+            <strong>{a.current_price_without_rc ? money(a.current_price_without_rc) : '—'}</strong>
+            <em className="adm-muted small">
+              {a.bid_count_without_rc} bid{a.bid_count_without_rc === 1 ? '' : 's'}
+              {a.starting_price_without_rc ? ` · expected ${money(a.starting_price_without_rc)}` : ' · no expected amount'}
+            </em></div>
           <div className="adm-stat"><span>Starts</span><strong>{dateTime(a.starts_at)}</strong></div>
           <div className="adm-stat"><span>Ends</span><strong>{dateTime(a.ends_at)}</strong>
             {a.ends_at !== a.scheduled_ends_at && <em className="adm-muted small">originally {dateTime(a.scheduled_ends_at)}</em>}</div>
@@ -415,15 +428,19 @@ function AuctionDetail({ id, onClose }) {
           <ErrorBox message={bids.error} />
           {bids.data && (bids.data.items.length === 0 ? <p className="adm-muted">No bids yet.</p> : (
             <AdmTable className="compact">
-                <thead><tr><th>Amount</th><th>Bidder</th><th>Time</th></tr></thead>
+                <thead><tr><th>Amount</th><th>Rate</th><th>Bidder</th><th>Time</th></tr></thead>
                 <tbody>
-                  {bids.data.items.map((b, i) => (
-                    <tr key={b.id} className={i === 0 ? 'highlight' : ''}>
-                      <td><strong>{money(b.amount)}</strong>{i === 0 && <> <Badge value="live" label="highest" /></>}</td>
+                  {bids.data.items.map((b) => {
+                    const top = b.amount === (b.rc_option === 'without_rc' ? a.current_price_without_rc : a.current_price);
+                    return (
+                    <tr key={b.id} className={top ? 'highlight' : ''}>
+                      <td><strong>{money(b.amount)}</strong>{top && <> <Badge value="live" label="highest" /></>}</td>
+                      <td>{b.rc_option === 'without_rc' ? 'Without RC' : 'With RC'}</td>
                       <td>{b.bidder_name}<div className="adm-muted small">{b.bidder_email}</div></td>
                       <td>{dateTime(b.created_at)}</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </AdmTable>
           ))}

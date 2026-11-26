@@ -159,14 +159,17 @@ test.describe.serial('KYC, auction and bidding (real backend)', () => {
   test('buyer A bids: under the hidden starting price is refused, a valid bid is stored and survives a reload', async ({ page }) => {
     await signIn(page, buyerA.email, buyerA.password);
     await go(page, `/auctions/${auctionId}`);
-    // The starting price is admin-only (client, 2026-11-26): with no bids the page shows no amount at all.
-    await expect(page.locator('.pub-bid-figures')).toContainText('Bidding open');
-    await expect(page.locator('.pub-bid-figures')).not.toContainText('50,000');
+    // Every auction runs both ladders (client, 2026-11-26) and the expected amount is admin-only:
+    // with no bids each ladder shows "Bidding open" and no figure.
+    const withRc = page.locator('.pub-ladder').filter({ hasText: 'With RC' }).first();
+    await expect(page.locator('.pub-ladders')).toContainText('Without RC');
+    await expect(withRc.locator('.pub-ladder-figure')).toContainText('Bidding open');
+    await expect(withRc.locator('.pub-ladder-figure')).not.toContainText('50,000');
 
-    const box = page.locator('input[type="number"]');
+    const box = withRc.locator('input[type="number"]');
     const confirmBid = async (amount) => {
       await box.fill(amount);
-      await page.getByRole('button', { name: 'Place bid' }).click();
+      await withRc.getByRole('button', { name: 'Place With RC bid' }).click();
       const dialog = page.getByRole('dialog', { name: 'Confirm your bid' });
       await dialog.locator('input[type="checkbox"]').check();
       return clickFor(page, dialog.getByRole('button', { name: /Confirm bid/ }), 'POST', `/api/auctions/${auctionId}/bids`);
@@ -181,7 +184,7 @@ test.describe.serial('KYC, auction and bidding (real backend)', () => {
     expect(db('select count(*)::int n from auction_bids where auction_id = %s', auctionId)[0].n).toBe(0);
 
     await box.fill('51000');
-    await page.getByRole('button', { name: 'Place bid' }).click();
+    await withRc.getByRole('button', { name: 'Place With RC bid' }).click();
     const confirm = page.getByRole('dialog', { name: 'Confirm your bid' });
     await expect(confirm.getByRole('button', { name: /Confirm bid/ })).toBeDisabled();   // terms must be accepted
     await confirm.locator('input[type="checkbox"]').check();
@@ -210,24 +213,25 @@ test.describe.serial('KYC, auction and bidding (real backend)', () => {
     const a = await ctx.newPage();
     await signIn(a, buyerA.email, buyerA.password);
     await go(a, `/auctions/${auctionId}`);
-    await expect(a.getByText('You are the highest bidder.')).toBeVisible();
+    await expect(a.getByText('You are the highest bidder (With RC).')).toBeVisible();
 
     await signIn(page, buyerB.email, buyerB.password);
     await go(page, `/auctions/${auctionId}`);
-    await page.locator('input[type="number"]').fill('52500');
-    await page.getByRole('button', { name: 'Place bid' }).click();
+    const bWithRc = page.locator('.pub-ladder').filter({ hasText: 'With RC' }).first();
+    await bWithRc.locator('input[type="number"]').fill('52500');
+    await bWithRc.getByRole('button', { name: 'Place With RC bid' }).click();
     const confirm = page.getByRole('dialog', { name: 'Confirm your bid' });
     await confirm.locator('input[type="checkbox"]').check();
     expect((await clickFor(page, confirm.getByRole('button', { name: /Confirm bid/ }), 'POST', '/bids')).status).toBe(201);
     expect(db('select current_price::text from auctions where id = %s', auctionId)[0].current_price).toBe('52500.00');
 
     // A's page polls every 3s; the dialog appears on its own, without a reload.
-    const alert = a.getByRole('alertdialog', { name: 'You have been outbid' });
+    const alert = a.getByRole('alertdialog', { name: 'You have been outbid (With RC)' });
     await expect(alert).toBeVisible({ timeout: 15000 });
     await expect(alert).toContainText('Your bid is lower than the expected price. Kindly increase your bid.');
     await alert.getByRole('button', { name: 'Place a higher bid' }).click();
-    await expect(a.getByText('You are the highest bidder.')).toHaveCount(0);
-    await expect(a.locator('input[type="number"]')).toBeVisible();
+    await expect(a.getByText('You are the highest bidder (With RC).')).toHaveCount(0);
+    await expect(a.locator('.pub-ladder input[type="number"]')).toHaveCount(2);   // both ladders open
     const notes = db("select kind from notifications n join users u on u.id = n.user_id where u.email = %s order by n.created_at desc", buyerA.email).map((r) => r.kind);
     test.info().annotations.push({ type: 'db notifications for A', description: notes.join(', ') });
     expect(notes).toContain('outbid');                                         // buyer A was told in the notification list
