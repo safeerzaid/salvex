@@ -71,7 +71,6 @@ export function VehiclePhoto({ vehicle, index = 0, className, size }) {
 
 export function AuctionCard({ auction, offset }) {
   const v = auction.vehicle;
-  const price = auction.current_price ?? auction.starting_price;
   return (
     <Link to={`/auctions/${auction.id}`} className="pub-card">
       <div className="pub-card-media">
@@ -84,8 +83,10 @@ export function AuctionCard({ auction, offset }) {
         <p className="pub-card-meta"><MapPin size={13} /> {v.location}</p>
         <div className="pub-card-price">
           <div>
-            <span>{auction.current_price ? 'Current bid' : 'Starting price'}</span>
-            <strong>{money(price)}</strong>
+            <span>{auction.current_price ? 'Current bid' : 'Bidding'}</span>
+            {auction.current_price
+              ? <strong>{money(auction.current_price)}</strong>
+              : <strong className="pub-no-bids">No bids yet</strong>}
           </div>
           <div className="right">
             <span><Gavel size={12} /> {auction.bid_count} bid{auction.bid_count === 1 ? '' : 's'}</span>

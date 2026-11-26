@@ -86,11 +86,15 @@ class ExtendRequest(ReasonRequest):
 
 
 class AuctionPublic(BaseModel):
-    """What everyone sees. Who is winning is not shown here (bid history, masked, comes in Module 6)."""
+    """What everyone sees. Who is winning is not shown here (bid history, masked, comes in Module 6).
+
+    The starting price is NOT part of this view. The client asked on 2026-11-26 that it stay hidden from
+    bidders and be visible to admins only, so it is served by the admin endpoints alone - never here, and
+    never in a bid refusal message. Before the first bid `current_price` is None and the page says only
+    that bidding is open."""
     id: uuid.UUID
     phase: str
     result: Optional[str]
-    starting_price: Decimal
     current_price: Optional[Decimal]
     bid_count: int
     starts_at: datetime
@@ -103,7 +107,7 @@ class AuctionPublic(BaseModel):
     @classmethod
     def build(cls, auction, now: datetime) -> "AuctionPublic":
         return cls(
-            id=auction.id, phase=auction.phase(now), result=auction.result, starting_price=auction.starting_price,
+            id=auction.id, phase=auction.phase(now), result=auction.result,
             current_price=auction.current_price, bid_count=auction.bid_count, starts_at=auction.starts_at,
             ends_at=auction.ends_at, extension_enabled=auction.extension_enabled,
             extension_minutes=auction.extension_minutes, server_time=now,

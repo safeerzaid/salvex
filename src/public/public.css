@@ -434,3 +434,13 @@
     transform: none;
   }
 }
+
+/* A bid refused for being under the starting price, which bidders are not shown (client, 2026-11-26). */
+.pub-modal-alert { max-width: 400px; align-items: center; text-align: center; gap: 10px; }
+.pub-modal-alert .pub-modal-icon { color: #F59E0B; }
+.pub-modal-alert h3 { justify-content: center; }
+.pub-modal-text { font-size: 15px; line-height: 1.55; color: #334155; }
+.pub-modal-alert .pub-modal-actions { justify-content: center; width: 100%; margin-top: 4px; }
+
+/* No bids yet: the starting price is admin-only, so cards and the bid box show this instead of a price. */
+.pub-no-bids { font-size: 16px; font-weight: 600; color: #64748B; }

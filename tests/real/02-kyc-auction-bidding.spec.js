@@ -156,13 +156,29 @@ test.describe.serial('KYC, auction and bidding (real backend)', () => {
     expect(db('select count(*)::int n from auction_bids where auction_id = %s', auctionId)[0].n).toBe(0);
   });
 
-  test('buyer A bids: too low is blocked, a valid bid is stored and survives a reload', async ({ page }) => {
+  test('buyer A bids: under the hidden starting price is refused, a valid bid is stored and survives a reload', async ({ page }) => {
     await signIn(page, buyerA.email, buyerA.password);
     await go(page, `/auctions/${auctionId}`);
+    // The starting price is admin-only (client, 2026-11-26): with no bids the page shows no amount at all.
+    await expect(page.locator('.pub-bid-figures')).toContainText('Bidding open');
+    await expect(page.locator('.pub-bid-figures')).not.toContainText('50,000');
+
     const box = page.locator('input[type="number"]');
-    await box.fill('40000');
-    await expect(page.getByText(/Your bid must be at least/)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Place bid' })).toBeDisabled();
+    const confirmBid = async (amount) => {
+      await box.fill(amount);
+      await page.getByRole('button', { name: 'Place bid' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Confirm your bid' });
+      await dialog.locator('input[type="checkbox"]').check();
+      return clickFor(page, dialog.getByRole('button', { name: /Confirm bid/ }), 'POST', `/api/auctions/${auctionId}/bids`);
+    };
+
+    // Below the starting price: the client cannot know, so the server refuses and the page shows a dialog.
+    expect((await confirmBid('40000')).status).toBe(409);
+    const alert = page.getByRole('alertdialog', { name: 'Bid too low' });
+    await expect(alert).toContainText('Your bid is lower than the expected price. Kindly increase your bid.');
+    await expect(alert).not.toContainText('50,000');                       // the amount is never given away
+    await alert.getByRole('button', { name: 'Try a higher bid' }).click();
+    expect(db('select count(*)::int n from auction_bids where auction_id = %s', auctionId)[0].n).toBe(0);
 
     await box.fill('51000');
     await page.getByRole('button', { name: 'Place bid' }).click();

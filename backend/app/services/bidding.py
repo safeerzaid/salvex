@@ -100,7 +100,10 @@ async def place_bid(db: AsyncSession, bidder: User, auction_id: uuid.UUID, amoun
         raise ApiError(409, "You are already the highest bidder.", "already_highest")
     if auction.current_price is None:
         if amount < auction.starting_price:
-            raise ApiError(409, f"The first bid must be at least {auction.starting_price}.", "bid_too_low")
+            # The starting price is hidden from bidders (client, 2026-11-26), so the refusal must not
+            # contain it: a bidder could otherwise find it by bidding 1 and reading the message back.
+            raise ApiError(409, "Your bid is lower than the expected price. Kindly increase your bid.",
+                           "bid_below_starting_price")
     elif amount <= auction.current_price:
         raise ApiError(409, f"Your bid must be higher than the current bid of {auction.current_price}.", "bid_too_low")
 

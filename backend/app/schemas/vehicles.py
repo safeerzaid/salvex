@@ -237,9 +237,9 @@ class AdminVehicleRow(BaseModel):
 
 
 class OpenAuctionSummary(BaseModel):
+    """The open auction on a catalogue card. No starting price: see AuctionPublic for why."""
     id: uuid.UUID
     phase: str
-    starting_price: Decimal
     current_price: Optional[Decimal]
     bid_count: int
     starts_at: datetime
@@ -261,7 +261,7 @@ class CatalogueVehicle(_VehicleCommon):
         data = _VehicleCommon.model_validate(vehicle).model_dump()
         summary = None
         if auction is not None:
-            summary = OpenAuctionSummary(id=auction.id, phase=auction.phase(now), starting_price=auction.starting_price,
+            summary = OpenAuctionSummary(id=auction.id, phase=auction.phase(now),
                                          current_price=auction.current_price, bid_count=auction.bid_count,
                                          starts_at=auction.starts_at, ends_at=auction.ends_at)
         return cls(**data, registration_number=vehicle.registration_number,

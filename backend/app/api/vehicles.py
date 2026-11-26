@@ -228,7 +228,7 @@ async def _with_open_auctions(db: AsyncSession, page):
     for item in page.items:
         auction = auctions.get(item.id)
         if auction is not None:
-            item.auction = OpenAuctionSummary(id=auction.id, phase=auction.phase(now), starting_price=auction.starting_price,
+            item.auction = OpenAuctionSummary(id=auction.id, phase=auction.phase(now),
                                               current_price=auction.current_price, bid_count=auction.bid_count,
                                               starts_at=auction.starts_at, ends_at=auction.ends_at)
     return page

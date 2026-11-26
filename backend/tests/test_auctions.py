@@ -129,9 +129,11 @@ async def test_public_lists_by_phase_with_server_time_and_vehicle(api, storage):
     live_items = await public_ids(api, "live")
     assert live in live_items and upcoming not in live_items
     card = live_items[live]
-    assert card["phase"] == "live" and card["server_time"] and card["starting_price"] == "50000.00"
+    assert card["phase"] == "live" and card["server_time"] and card["current_price"] is None
     assert card["vehicle"]["id"] == vid2 and "*" not in card["vehicle"]["registration_number"]
-    assert not {"current_winner_id", "created_by_id", "status"} & set(card)
+    # The starting price is admin-only (client, 2026-11-26): it must not reach any public view.
+    assert not {"current_winner_id", "created_by_id", "status", "starting_price"} & set(card)
+    assert "starting_price" not in (card["vehicle"].get("auction") or {})
     assert upcoming in await public_ids(api, "upcoming") and live not in await public_ids(api, "upcoming")
     assert (await api.client.get(f"/api/auctions/{live}")).json()["phase"] == "live"
     assert (await api.client.get("/api/auctions?phase=everything")).status_code == 422

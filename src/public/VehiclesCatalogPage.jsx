@@ -98,8 +98,10 @@ export default function VehiclesCatalogPage() {
                   {v.listing_type === 'ready_to_lift' ? (
                     <div><span>Ready to Lift</span><strong className="pub-rtl-text">Available now</strong></div>
                   ) : v.auction ? (
-                    <div><span>{v.auction.current_price ? 'Current bid' : 'Starting price'}</span>
-                      <strong>{money(v.auction.current_price ?? v.auction.starting_price)}</strong></div>
+                    <div><span>{v.auction.current_price ? 'Current bid' : 'Bidding'}</span>
+                      {v.auction.current_price
+                        ? <strong>{money(v.auction.current_price)}</strong>
+                        : <strong className="pub-no-bids">No bids yet</strong>}</div>
                   ) : <div><span>Auction</span><strong className="pub-muted">Next auction coming soon</strong></div>}
                 </div>
               </div>

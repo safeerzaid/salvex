@@ -103,7 +103,9 @@ async def test_amount_rule_first_bid_at_least_start_then_any_higher_amount(api, 
     second, second_id = await verified_bidder(api)
 
     low = await bid(api, first, aid, "49999.99")
-    assert low.status_code == 409 and low.json()["code"] == "bid_too_low"
+    assert low.status_code == 409 and low.json()["code"] == "bid_below_starting_price"
+    # The refusal must not give the starting price away: it is hidden from bidders (client, 2026-11-26).
+    assert "50000" not in low.json()["detail"] and low.json()["detail"].startswith("Your bid is lower")
     ok = await bid(api, first, aid, "50000")
     assert ok.status_code == 201, ok.text
     body = ok.json()

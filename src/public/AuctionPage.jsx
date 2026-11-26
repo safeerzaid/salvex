@@ -135,8 +135,10 @@ export default function AuctionPage() {
               <p className="pub-card-meta"><MapPin size={14} /> {v.location} · {v.registration_number}</p>
 
               <div className="pub-bid-figures">
-                <div><span>{auction.current_price ? 'Current bid' : 'Starting price'}</span>
-                  <strong>{money(auction.current_price ?? auction.starting_price)}</strong></div>
+                <div><span>{auction.current_price ? 'Current bid' : 'Bidding'}</span>
+                  {auction.current_price
+                    ? <strong>{money(auction.current_price)}</strong>
+                    : <strong className="pub-no-bids">Bidding open</strong>}</div>
                 <div><span>Bids</span><strong>{auction.bid_count}</strong></div>
               </div>
               <div className="pub-bid-time">
@@ -173,13 +175,16 @@ export default function AuctionPage() {
 
 function BidArea({ auction, user, youLead, location, onBid }) {
   const site = useSiteConfig();
-  const minimum = useMemo(() => {
-    if (auction.current_price) return Math.floor(Number(auction.current_price)) + 1;
-    return Math.ceil(Number(auction.starting_price));
-  }, [auction.current_price, auction.starting_price]);
+  // Only known once someone has bid. The starting price is admin-only (client, 2026-11-26), so before
+  // the first bid the form shows no minimum and the server decides whether the amount is high enough.
+  const minimum = useMemo(
+    () => (auction.current_price ? Math.floor(Number(auction.current_price)) + 1 : null),
+    [auction.current_price],
+  );
   const [amount, setAmount] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [message, setMessage] = useState(null);
+  const [lowBid, setLowBid] = useState(null);       // refused for being under the hidden starting price
 
   if (auction.phase === 'ended') {
     if (auction.result === 'sold') {
@@ -220,23 +225,26 @@ function BidArea({ auction, user, youLead, location, onBid }) {
   if (youLead) return <div className="pub-state success"><Trophy size={18} /> <div><strong>You are the highest bidder.</strong><p>We will show here if someone outbids you.</p></div></div>;
 
   const value = Number(amount);
-  const tooLow = amount !== '' && value < minimum;
+  const tooLow = minimum !== null && amount !== '' && value < minimum;
   const quick = [1000, 5000, 10000, 25000];
 
   return (
     <div className="pub-bid-form">
       <label>
-        <span>Your bid (₹) · minimum {money(minimum)}</span>
-        <input type="number" inputMode="numeric" min={minimum} step="1" value={amount} placeholder={String(minimum)}
+        <span>{minimum === null ? 'Your bid (₹)' : `Your bid (₹) · minimum ${money(minimum)}`}</span>
+        <input type="number" inputMode="numeric" min={minimum ?? 1} step="1" value={amount}
+          placeholder={minimum === null ? 'Enter your bid' : String(minimum)}
           onChange={(e) => { setAmount(e.target.value); setMessage(null); }} />
       </label>
-      <div className="pub-quick">
-        {quick.map((q) => (
-          <button key={q} type="button" onClick={() => setAmount(String((auction.current_price ? Math.floor(Number(auction.current_price)) : minimum) + q))}>
-            +{q.toLocaleString('en-IN')}
-          </button>
-        ))}
-      </div>
+      {minimum !== null && (
+        <div className="pub-quick">
+          {quick.map((q) => (
+            <button key={q} type="button" onClick={() => setAmount(String(Math.floor(Number(auction.current_price)) + q))}>
+              +{q.toLocaleString('en-IN')}
+            </button>
+          ))}
+        </div>
+      )}
       {tooLow && <p className="pub-form-error">Your bid must be at least {money(minimum)}.</p>}
       {message && <p className={message.ok ? 'pub-form-ok' : 'pub-form-error'} role={message.ok ? 'status' : 'alert'}>{message.text}</p>}
       <button type="button" className="pub-btn primary block" disabled={!amount || tooLow || !(value > 0)} onClick={() => setConfirming(true)}>
@@ -244,9 +252,32 @@ function BidArea({ auction, user, youLead, location, onBid }) {
       </button>
       {confirming && (
         <ConfirmBid auctionId={auction.id} amount={value} onClose={() => setConfirming(false)}
-          onDone={(text, ok) => { setConfirming(false); setMessage({ text, ok }); if (ok) setAmount(''); onBid(); }} />
+          onDone={(text, ok, code) => {
+            setConfirming(false);
+            // A bid under the (hidden) starting price gets its own dialog, so it cannot be missed.
+            if (code === 'bid_below_starting_price') setLowBid(text);
+            else { setMessage({ text, ok }); if (ok) setAmount(''); }
+            onBid();
+          }} />
       )}
+      {lowBid && <LowBidDialog text={lowBid} onClose={() => setLowBid(null)} />}
     </div>
+  );
+}
+
+/** Shown when the server refuses a bid for being under the starting price, which bidders never see. */
+function LowBidDialog({ text, onClose }) {
+  return (
+    <ModalLayer onClose={onClose}>
+      <div className="pub-modal pub-modal-alert" role="alertdialog" aria-modal="true" aria-label="Bid too low">
+        <AlertTriangle size={32} className="pub-modal-icon" />
+        <h3>Bid too low</h3>
+        <p className="pub-modal-text">{text}</p>
+        <div className="pub-modal-actions">
+          <button type="button" className="pub-btn primary" onClick={onClose} autoFocus>Try a higher bid</button>
+        </div>
+      </div>
+    </ModalLayer>
   );
 }
 
@@ -263,7 +294,7 @@ function ConfirmBid({ auctionId, amount, onClose, onDone }) {
         ? `Bid of ${money(result.amount)} placed. The auction was extended.`
         : `Bid of ${money(result.amount)} placed. You are the highest bidder.`, true);
     } catch (err) {
-      onDone(err.message, false);
+      onDone(err.message, false, err.code);
     }
   };
 
