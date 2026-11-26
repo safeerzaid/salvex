@@ -99,7 +99,7 @@ Ready to Lift വാഹനത്തിന് Listing, KM driven, Superdari ന�
 
 ## 6. KYC
 
-Admin → **KYC**: Aadhaar നമ്പർ (അവസാന 4 അക്കം മാത്രം കാണും), Aadhaar, PAN, Cancelled cheque കോപ്പികൾ നോക്കി
+Admin → **KYC**: Aadhaar നമ്പർ (അവസാന 4 അക്കം മാത്രം കാണും), Aadhaar, PAN കോപ്പികൾ നോക്കി
 **Approve** / **Request changes** / **Reject** (കാരണം എഴുതണം). ഒരേ Aadhaar മറ്റൊരു അക്കൗണ്ടിൽ ഉണ്ടെങ്കിൽ മുന്നറിയിപ്പ് കാണിക്കും.
 KYC approve ആയവർക്ക് മാത്രം ബിഡ് ചെയ്യാം.
 

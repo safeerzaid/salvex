@@ -129,9 +129,10 @@ class Settings(BaseSettings):
     )
     KYC_MAX_FILE_BYTES: int = Field(default=5 * 1024 * 1024, ge=1024, le=25 * 1024 * 1024)
     KYC_MAX_DOCUMENTS_PER_SUBMISSION: int = Field(default=10, ge=1, le=50)
-    # Documents needed before a KYC can be sent for review (client: Aadhaar copy, PAN card, cancelled cheque) and
+    # Documents needed before a KYC can be sent for review (client, 2026-11-26: Aadhaar copy and PAN card only -
+    # the cancelled cheque was dropped) and
     # whether the Aadhaar number must be entered. Empty list = any one document.
-    KYC_REQUIRED_DOCUMENTS: str = Field(default="aadhaar_card,pan_card,cancelled_cheque")
+    KYC_REQUIRED_DOCUMENTS: str = Field(default="aadhaar_card,pan_card")
     KYC_REQUIRE_AADHAAR_NUMBER: bool = Field(default=True)
 
     # ---------------- Vehicle photos ----------------

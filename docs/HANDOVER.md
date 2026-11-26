@@ -9,7 +9,7 @@ has to provide before going live.
 |---|---|
 | Business model | The client is a middleman: insurance companies give vehicles, the admin uploads them, buyers bid (or tap "I'm interested" on Ready to Lift), the admin contacts the winner / buyer and connects them with the owner. The deal and payment happen outside the website. No payment gateway. |
 | Accounts | Register as a buyer (seller accounts are off: `SELLER_ACCOUNTS=false`), every buyer gets a Buyer ID (`SLX-000123`) the admin can search by, email code verification (signed in automatically), login, logout, forgot/reset password, sessions with HttpOnly cookies, CSRF protection, rate limits |
-| KYC | Buyers enter the Aadhaar number (checked, stored only as the last 4 digits + a keyed hash; the same Aadhaar on two accounts is flagged) and upload Aadhaar, PAN and a cancelled cheque (private storage); admins approve / reject / request changes with a reason; users are notified; only KYC-approved users can bid |
+| KYC | Buyers enter the Aadhaar number (checked, stored only as the last 4 digits + a keyed hash; the same Aadhaar on two accounts is flagged) and upload Aadhaar and PAN copies (private storage; the cancelled cheque was dropped on 2026-11-26); admins approve / reject / request changes with a reason; users are notified; only KYC-approved users can bid |
 | Vehicles | Admins add vehicles one by one or by **bulk upload** (Excel / CSV template, every row checked first, photos matched by registration number from a folder, optional auction columns), with the company field list, KM driven, Superdari, an auction category (Insurance / Bank-NBFC / Used vehicle) and photos; admin review (approve / reject / request changes); public catalogue with search and filters |
 | Auctions | Listed by category from the menu; admin creates an auction for an approved vehicle: starting price, start/end time, late-bid time extension ON/OFF + minutes; pause / resume / extend / cancel / close, each with a reason in the audit log |
 | Bidding | Live bidding page with server-clock countdown; first bid ≥ starting price, then any amount above the current bid; bid confirmation + terms; double-click safe; 50 simultaneous bids tested; masked bidder names; updates every few seconds |
@@ -128,7 +128,7 @@ The test runner refuses to use any database that is not local or whose name does
 |---|---|---|
 | `ONLINE_PAYMENT_FLOW` | `false` | No online payment. Winners are contacted by the team; the admin records the deal and service fee. `true` brings back bank transfer + UTR, the 48-hour deadline, reminders and the unpaid-win bidding block |
 | `SELLER_ACCOUNTS` | `false` | Registration is buyer-only; only admins add vehicles |
-| `KYC_REQUIRED_DOCUMENTS` | `aadhaar_card,pan_card,cancelled_cheque` | Documents a buyer must upload before submitting KYC |
+| `KYC_REQUIRED_DOCUMENTS` | `aadhaar_card,pan_card` | Documents a buyer must upload before submitting KYC |
 | `KYC_REQUIRE_AADHAAR_NUMBER` | `true` | The Aadhaar number must be entered (only the last 4 digits are kept) |
 | `PAYMENT_REMINDER_HOURS_IST` | `9,14,19` | Reminder times for unpaid wins (used only when `ONLINE_PAYMENT_FLOW=true`) |
 

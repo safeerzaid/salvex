@@ -69,7 +69,7 @@ async def start_submission(request: Request, ctx: AuthContext = Depends(require_
 async def upload_document(
     submission_id: uuid.UUID,
     request: Request,
-    document_type: DocumentType = Query(..., description="aadhaar_card, pan_card, cancelled_cheque or other"),
+    document_type: DocumentType = Query(..., description="aadhaar_card, pan_card or other"),
     ctx: AuthContext = Depends(require_csrf),
     db: AsyncSession = Depends(get_db),
     storage: PrivateStorage = Depends(get_private_storage),

@@ -1,12 +1,11 @@
 // Calls to the KYC endpoints (see backend/app/api/kyc.py).
 import { apiRequest, apiUrl } from './client';
 
-// Provisional generic list, the same as the backend's (company has not fixed the required documents yet).
-// The documents our team checks (all three are needed), plus "other" for anything extra they ask for.
+// The documents our team checks - both are needed - plus "other" for anything extra they ask for.
+// The client dropped the cancelled cheque on 2026-11-26; it is only a label now, for older submissions.
 export const DOCUMENT_TYPES = [
   { value: 'aadhaar_card', label: 'Aadhaar card', hint: 'Front and back of your Aadhaar card (you may cover the first 8 digits).' },
   { value: 'pan_card', label: 'PAN card', hint: 'Your PAN card.' },
-  { value: 'cancelled_cheque', label: 'Cancelled cheque', hint: 'A cheque from your own bank account with "CANCELLED" written across it.' },
   { value: 'other', label: 'Other document', hint: 'Anything else our team asked you for.' },
 ];
 
@@ -15,6 +14,7 @@ export const DOCUMENT_TYPES = [
 // in KYC_REQUIRED_DOCUMENTS can always be uploaded here and never blocks "Submit for review" for good.
 export const ALL_DOCUMENT_TYPES = [
   ...DOCUMENT_TYPES.filter((t) => t.value !== 'other'),
+  { value: 'cancelled_cheque', label: 'Cancelled cheque', hint: 'A cheque from your own bank account with "CANCELLED" written across it.' },
   { value: 'identity_proof', label: 'Identity proof', hint: 'Passport, driving licence or voter ID.' },
   { value: 'address_proof', label: 'Address proof', hint: 'A recent utility bill, rent agreement or bank statement showing your address.' },
   { value: 'business_proof', label: 'Business proof', hint: 'GST certificate, Udyam certificate or trade licence.' },

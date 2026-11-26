@@ -26,7 +26,6 @@ async function submitKyc(page, buyer) {
   for (const [label, file] of [
     ['Aadhaar card', { name: 'aadhaar.png', mimeType: 'image/png', buffer: PNG }],
     ['PAN card', { name: 'pan.pdf', mimeType: 'application/pdf', buffer: PDF }],
-    ['Cancelled cheque', { name: 'cheque.png', mimeType: 'image/png', buffer: PNG }],
   ]) expect((await uploadDoc(page, label, file)).status).toBe(201);
 
   const aadhaar = fakeAadhaar();

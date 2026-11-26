@@ -10,7 +10,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # PROVISIONAL generic list, as approved in docs/MASTER_PLAN.md section 6 until the company decides which
 # documents are required. Nothing is required yet beyond "at least one document" at submission.
-# The client's list (Aadhaar copy, PAN card, cancelled cheque) plus the earlier generic types, still accepted.
+# The client's list (Aadhaar copy and PAN card) plus the earlier generic types, all still accepted on upload.
+# cancelled_cheque stays here so submissions made while it was required can still be read and downloaded;
+# it is no longer in KYC_REQUIRED_DOCUMENTS (the client dropped it on 2026-11-26).
 DocumentType = Literal["aadhaar_card", "pan_card", "cancelled_cheque", "identity_proof", "address_proof",
                        "business_proof", "other"]
 DOCUMENT_LABELS = {"aadhaar_card": "Aadhaar card", "pan_card": "PAN card", "cancelled_cheque": "Cancelled cheque",

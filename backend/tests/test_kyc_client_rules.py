@@ -1,5 +1,6 @@
 """
-The client's KYC: Aadhaar number (only last 4 digits kept + keyed hash), Aadhaar copy, PAN card, cancelled cheque.
+The client's KYC: Aadhaar number (only last 4 digits kept + keyed hash), Aadhaar copy and PAN card.
+The cancelled cheque was required until 2026-11-26, when the client dropped it.
 """
 import pytest
 from sqlalchemy import select
@@ -21,21 +22,28 @@ VALID = "2345 6789 0124"          # passes the Aadhaar (Verhoeff) check
 
 @pytest.fixture
 def client_rules(monkeypatch):
-    monkeypatch.setattr(settings, "KYC_REQUIRED_DOCUMENTS", "aadhaar_card,pan_card,cancelled_cheque")
+    monkeypatch.setattr(settings, "KYC_REQUIRED_DOCUMENTS", "aadhaar_card,pan_card")
     monkeypatch.setattr(settings, "KYC_REQUIRE_AADHAAR_NUMBER", True)
 
 
-async def test_all_three_documents_and_the_aadhaar_number_are_needed(api, storage, client_rules):
+def test_the_default_required_documents_are_aadhaar_and_pan_only():
+    """The client dropped the cancelled cheque on 2026-11-26; a deployment that sets nothing must follow."""
+    from app.core.config import Settings
+
+    assert Settings.model_fields["KYC_REQUIRED_DOCUMENTS"].default == "aadhaar_card,pan_card"
+
+
+async def test_both_documents_and_the_aadhaar_number_are_needed(api, storage, client_rules):
     headers, sid = await begin(api)
     me = (await api.client.get("/api/kyc/me", headers=headers)).json()["submission"]
-    assert me["required_documents"] == ["aadhaar_card", "pan_card", "cancelled_cheque"] and me["aadhaar_number_needed"]
+    assert me["required_documents"] == ["aadhaar_card", "pan_card"] and me["aadhaar_number_needed"]
+    assert me["all_required_documents"] == ["aadhaar_card", "pan_card"]
 
     assert (await upload(api, headers, sid, data=JPEG, content_type="image/jpeg", document_type="aadhaar_card")).status_code == 201
     res = await api.client.post(f"/api/kyc/submissions/{sid}/submit", headers=headers)
     assert res.status_code == 422 and res.json()["code"] == "kyc_documents_missing"
-    assert "PAN card" in res.json()["detail"] and "Cancelled cheque" in res.json()["detail"]
-    for doc in ("pan_card", "cancelled_cheque"):
-        assert (await upload(api, headers, sid, data=JPEG, content_type="image/jpeg", document_type=doc)).status_code == 201
+    assert "PAN card" in res.json()["detail"] and "Cancelled cheque" not in res.json()["detail"]
+    assert (await upload(api, headers, sid, data=JPEG, content_type="image/jpeg", document_type="pan_card")).status_code == 201
     res = await api.client.post(f"/api/kyc/submissions/{sid}/submit", headers=headers)
     assert res.status_code == 422 and res.json()["code"] == "kyc_aadhaar_missing"
 
@@ -53,7 +61,7 @@ async def test_all_three_documents_and_the_aadhaar_number_are_needed(api, storag
     _, admin = await make_admin(api)
     detail = (await api.client.get(f"/api/admin/kyc/submissions/{sid}", headers=admin)).json()
     assert detail["aadhaar_masked"] == "XXXX XXXX 0124" and detail["aadhaar_used_by_other_account"] is False
-    assert {d["document_type"] for d in detail["documents"]} == {"aadhaar_card", "pan_card", "cancelled_cheque"}
+    assert {d["document_type"] for d in detail["documents"]} == {"aadhaar_card", "pan_card"}
 
 
 async def test_one_aadhaar_cannot_be_used_by_two_accounts(api, storage, client_rules):
