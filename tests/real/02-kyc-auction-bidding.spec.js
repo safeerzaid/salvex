@@ -204,7 +204,14 @@ test.describe.serial('KYC, auction and bidding (real backend)', () => {
     expect(db('select current_price::text from auctions where id = %s', auctionId)[0].current_price).toBe('51000.00');
   });
 
-  test('buyer B outbids through the page; buyer A is told and sees it after a reload', async ({ page, browser }) => {
+  test('buyer B outbids through the page; buyer A, watching, gets the outbid dialog', async ({ page, browser }) => {
+    // Buyer A is on the auction page and leading BEFORE B bids, so the page itself can tell them.
+    const ctx = await browser.newContext();
+    const a = await ctx.newPage();
+    await signIn(a, buyerA.email, buyerA.password);
+    await go(a, `/auctions/${auctionId}`);
+    await expect(a.getByText('You are the highest bidder.')).toBeVisible();
+
     await signIn(page, buyerB.email, buyerB.password);
     await go(page, `/auctions/${auctionId}`);
     await page.locator('input[type="number"]').fill('52500');
@@ -214,10 +221,11 @@ test.describe.serial('KYC, auction and bidding (real backend)', () => {
     expect((await clickFor(page, confirm.getByRole('button', { name: /Confirm bid/ }), 'POST', '/bids')).status).toBe(201);
     expect(db('select current_price::text from auctions where id = %s', auctionId)[0].current_price).toBe('52500.00');
 
-    const ctx = await browser.newContext();
-    const a = await ctx.newPage();
-    await signIn(a, buyerA.email, buyerA.password);
-    await go(a, `/auctions/${auctionId}`);
+    // A's page polls every 3s; the dialog appears on its own, without a reload.
+    const alert = a.getByRole('alertdialog', { name: 'You have been outbid' });
+    await expect(alert).toBeVisible({ timeout: 15000 });
+    await expect(alert).toContainText('Your bid is lower than the expected price. Kindly increase your bid.');
+    await alert.getByRole('button', { name: 'Place a higher bid' }).click();
     await expect(a.getByText('You are the highest bidder.')).toHaveCount(0);
     await expect(a.locator('input[type="number"]')).toBeVisible();
     const notes = db("select kind from notifications n join users u on u.id = n.user_id where u.email = %s order by n.created_at desc", buyerA.email).map((r) => r.kind);

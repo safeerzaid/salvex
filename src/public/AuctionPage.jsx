@@ -35,6 +35,7 @@ export default function AuctionPage() {
   const [error, setError] = useState(null);
   const [options, setOptions] = useState({});
   const [photo, setPhoto] = useState(0);
+  const [outbid, setOutbid] = useState(false);      // someone has just taken the lead from you
 
   const refresh = useCallback(async () => {
     try {
@@ -52,6 +53,15 @@ export default function AuctionPage() {
   useEffect(() => { getVehicleOptions().then(setOptions).catch(() => {}); }, []);
 
   const phase = auction?.phase;
+  // The server guarantees every accepted bid is above the expected (starting) price and above the one
+  // before it, so the leader is always both. The bid history is masked; only is_you identifies you.
+  const youLead = Boolean(history[0]?.is_you);
+  const wasLeading = useRef(false);
+  useEffect(() => {                       // tell the leader, there and then, when they are outbid
+    if (wasLeading.current && !youLead && phase !== 'ended' && phase !== 'cancelled') setOutbid(true);
+    wasLeading.current = youLead;
+  }, [youLead, phase]);
+
   useEffect(() => {                       // follow the auction: fast while live, slower otherwise
     if (!phase || phase === 'ended' || phase === 'cancelled') return undefined;
     const timer = setInterval(refresh, phase === 'live' || phase === 'closing' ? 3000 : 15000);
@@ -69,7 +79,6 @@ export default function AuctionPage() {
 
   const v = auction.vehicle;
   const label = (field, value) => (field === 'damage_type' && v.damage_type === 'other' && v.damage_other ? v.damage_other : options[field]?.[value] || value);
-  const youLead = history[0]?.is_you;
 
   return (
     <div className="pub-page">
@@ -151,6 +160,7 @@ export default function AuctionPage() {
 
               <BidArea auction={auction} user={user} youLead={youLead} location={location} onBid={refresh} />
             </div>
+            {outbid && <OutbidDialog onClose={() => setOutbid(false)} />}
 
             <div className="pub-history">
               <h3>Bid history</h3>
@@ -222,7 +232,16 @@ function BidArea({ auction, user, youLead, location, onBid }) {
   if (auction.phase === 'upcoming') return <div className="pub-state">Bidding opens when the auction starts.</div>;
   if (auction.phase === 'paused') return <div className="pub-state warning"><AlertTriangle size={18} /> The auction is paused by the organiser.</div>;
   if (auction.phase === 'closing') return <div className="pub-state">The auction has ended and is being closed.</div>;
-  if (youLead) return <div className="pub-state success"><Trophy size={18} /> <div><strong>You are the highest bidder.</strong><p>We will show here if someone outbids you.</p></div></div>;
+  // Reached only when the server has accepted your bid, which means it cleared the expected price and
+  // every other bid: both conditions the client asked for before this is shown.
+  if (youLead) {
+    return (
+      <div className="pub-state success"><Trophy size={18} />
+        <div><strong>You are the highest bidder.</strong>
+          <p>Your bid is above the expected price and is the highest so far. We will tell you here if someone outbids you.</p></div>
+      </div>
+    );
+  }
 
   const value = Number(amount);
   const tooLow = minimum !== null && amount !== '' && value < minimum;
@@ -267,14 +286,26 @@ function BidArea({ auction, user, youLead, location, onBid }) {
 
 /** Shown when the server refuses a bid for being under the starting price, which bidders never see. */
 function LowBidDialog({ text, onClose }) {
+  return <BidAlertDialog title="Bid too low" text={text} action="Try a higher bid" onClose={onClose} />;
+}
+
+/** Shown to the bidder who was leading, the moment someone else takes the lead. */
+function OutbidDialog({ onClose }) {
+  return (
+    <BidAlertDialog title="You have been outbid" action="Place a higher bid" onClose={onClose}
+      text="Your bid is lower than the expected price. Kindly increase your bid." />
+  );
+}
+
+function BidAlertDialog({ title, text, action, onClose }) {
   return (
     <ModalLayer onClose={onClose}>
-      <div className="pub-modal pub-modal-alert" role="alertdialog" aria-modal="true" aria-label="Bid too low">
+      <div className="pub-modal pub-modal-alert" role="alertdialog" aria-modal="true" aria-label={title}>
         <AlertTriangle size={32} className="pub-modal-icon" />
-        <h3>Bid too low</h3>
+        <h3>{title}</h3>
         <p className="pub-modal-text">{text}</p>
         <div className="pub-modal-actions">
-          <button type="button" className="pub-btn primary" onClick={onClose} autoFocus>Try a higher bid</button>
+          <button type="button" className="pub-btn primary" onClick={onClose} autoFocus>{action}</button>
         </div>
       </div>
     </ModalLayer>
